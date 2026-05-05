@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Alpine Anime Demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #f7efe5 0%, #dbe7f0 100%);
+        color: #143642;
+      }
+
+      main {
+        width: min(960px, calc(100% - 3rem));
+        margin: 0 auto;
+      }
+
+      .hero {
+        min-height: 100vh;
+        display: grid;
+        align-items: center;
+      }
+
+      .hero h1 {
+        font-size: clamp(3rem, 8vw, 6rem);
+        line-height: 0.95;
+        letter-spacing: -0.04em;
+        margin: 0 0 1rem;
+      }
+
+      .hero p {
+        max-width: 36rem;
+        font-size: 1.125rem;
+      }
+
+      .cards {
+        display: grid;
+        gap: 1.5rem;
+        padding: 6rem 0 10rem;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .card {
+        padding: 2rem;
+        border-radius: 1.5rem;
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 25px 60px rgba(20, 54, 66, 0.12);
+      }
+    </style>
+  </head>
+  <body>
+    <main x-data>
+      <section class="hero">
+        <div x-anime.fade-right.duration.1200>
+          <p>Scroll down to trigger more presets.</p>
+          <h1>Alpine Anime</h1>
+          <p>A tiny Alpine plugin that uses modifier-based presets with Anime.js under the hood.</p>
+        </div>
+      </section>
+
+      <section class="cards">
+        <article class="card" x-anime.fade-left.duration.900>
+          <h2>Fade Left</h2>
+          <p>This card starts offset to the right and slides into place.</p>
+        </article>
+        <article class="card" x-anime.fade-right.duration.900.delay.100>
+          <h2>Fade Right</h2>
+          <p>This card starts offset to the left and arrives a beat later.</p>
+        </article>
+        <article class="card" x-anime.fade-up.delay.150.once>
+          <h2>Fade Up Once</h2>
+          <p>This card animates only on the first viewport entry.</p>
+        </article>
+        <article class="card" x-anime.scale-in.threshold.0_35.repeat>
+          <h2>Scale In Repeat</h2>
+          <p>This card replays after it leaves and re-enters the viewport.</p>
+        </article>
+      </section>
+    </main>
+
+    <script defer src="../dist/cdn.js"></script>
+    <script defer src="../node_modules/alpinejs/dist/cdn.min.js"></script>
+    <script>
+      document.addEventListener('alpine:init', () => {
+        if (typeof window.AlpineAnime === 'function') {
+          window.Alpine.plugin(window.AlpineAnime);
+        }
+      });
+    </script>
+  </body>
+</html>
