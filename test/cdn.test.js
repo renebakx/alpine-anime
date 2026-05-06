@@ -81,7 +81,12 @@ describe('CDN browser build', () => {
             });
         });
 
+        let observerOptions;
         globalThis.IntersectionObserver = class {
+            constructor(_, options) {
+                observerOptions = options;
+            }
+
             observe() {}
             disconnect() {}
         };
@@ -96,10 +101,14 @@ describe('CDN browser build', () => {
 
         const directive = directiveSpy.mock.calls[0][1];
         const element = document.createElement('article');
-        directive(element, { modifiers: ['blur-up', 'once', 'duration', '900'] });
+        directive(element, { modifiers: ['blur-up', 'once', 'duration', '900', 'threshold', '35', 'enter', '25', 'leave', '-10'] });
 
         expect(element.style.opacity).toBe('0');
         expect(element.style.transform).toBe('translateY(24px)');
         expect(element.style.filter).toBe('blur(12px)');
+        expect(observerOptions).toEqual({
+            threshold: 0.35,
+            rootMargin: '-10% 0px 25% 0px'
+        });
     });
 });

@@ -7,15 +7,15 @@ describe('parseModifiers', () => {
       duration: 800,
       delay: 0,
       ease: 'out(2)',
-      threshold: 0.2,
+      threshold: 0,
       replay: true,
       enterMargin: '0px',
       leaveMargin: '0px'
     });
   });
 
-  test('parses duration, delay, and threshold modifiers', () => {
-    expect(parseModifiers(['fade-left', 'duration', '1200', 'delay', '200', 'threshold', '0_35'])).toEqual({
+  test('parses duration, delay, and percentage threshold modifiers', () => {
+    expect(parseModifiers(['fade-left', 'duration', '1200', 'delay', '200', 'threshold', '35'])).toEqual({
       duration: 1200,
       delay: 200,
       ease: 'out(2)',
@@ -31,7 +31,7 @@ describe('parseModifiers', () => {
       duration: 800,
       delay: 0,
       ease: 'out(2)',
-      threshold: 0.2,
+      threshold: 0,
       replay: true,
       enterMargin: '0px',
       leaveMargin: '0px'
@@ -39,8 +39,10 @@ describe('parseModifiers', () => {
   });
 
   test('clamps threshold values to the intersection observer range', () => {
-    expect(parseModifiers(['threshold', '4'])).toMatchObject({ threshold: 1 });
-    expect(parseModifiers(['threshold', '-1'])).toMatchObject({ threshold: 0 });
+    expect(parseModifiers(['threshold', '100'])).toMatchObject({ threshold: 1 });
+    expect(parseModifiers(['threshold', '50'])).toMatchObject({ threshold: 0.5 });
+    expect(parseModifiers(['threshold', '140'])).toMatchObject({ threshold: 1 });
+    expect(parseModifiers(['threshold', '-10'])).toMatchObject({ threshold: 0 });
   });
 
   test('uses the last replay modifier when once and repeat both appear', () => {
@@ -48,12 +50,12 @@ describe('parseModifiers', () => {
     expect(parseModifiers(['repeat', 'once'])).toMatchObject({ replay: false });
   });
 
-  test('parses enter and leave viewport margins', () => {
-    expect(parseModifiers(['enter', '25p', 'leave', '-10p'])).toMatchObject({
+  test('parses enter and leave viewport margins as percentages by default', () => {
+    expect(parseModifiers(['enter', '25', 'leave', '-10'])).toMatchObject({
       enterMargin: '25%',
       leaveMargin: '-10%'
     });
-    expect(parseModifiers(['start', '120', 'end', '80px'])).toMatchObject({
+    expect(parseModifiers(['start', '120px', 'end', '80px'])).toMatchObject({
       enterMargin: '120px',
       leaveMargin: '80px'
     });

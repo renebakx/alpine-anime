@@ -155,7 +155,7 @@ Starts at `0.9` scale and grows to full size while fading in.
 Fades in on viewport enter and fades out on viewport leave.
 
 ```html
-<div x-anime.fade-in-out.enter.25p.leave.-10p.duration.1400>
+<div x-anime.fade-in-out.enter.25.leave.-10.duration.1400>
   Repeats while scrolling in and out.
 </div>
 ```
@@ -172,20 +172,131 @@ Modifiers are written as Alpine modifier tokens.
 | `ease.bezier-out` | `ease.bezier-out` | Uses the built-in cubic-bezier out curve |
 | `ease.power-in.<n>` | `ease.power-in.168` | Uses Anime.js `in(1.68)` |
 | `ease.power-out.<n>` | `ease.power-out.250` | Uses Anime.js `out(2.5)` |
-| `threshold.<ratio>` | `threshold.0_35` | Intersection threshold, clamped to `0..1` |
+| `threshold.<percent>` | `threshold.35` | How much of the element must be visible before enter runs, clamped to `0..100` |
 | `once` | `once` | Animate on first enter, then stop observing |
 | `repeat` | `repeat` | Animate again after leaving and re-entering |
-| `enter.<value>` / `start.<value>` | `enter.25p` | Adjust when enter is considered intersecting |
-| `leave.<value>` / `end.<value>` | `leave.-10p` | Adjust when leave is triggered |
+| `enter.<value>` / `start.<value>` | `enter.25` | Move the viewport bottom edge for enter detection |
+| `leave.<value>` / `end.<value>` | `leave.-10` | Move the viewport top edge for leave detection |
+
+### Visibility vs Viewport Offsets
+
+Use `threshold` when you care how much of the element is visible.
+
+For example, this starts the fade when about 30% of the element is visible in the viewport:
+
+```html
+<div x-anime.fade.threshold.30>
+  Starts when 30% visible.
+</div>
+```
+
+```text
+threshold.30
+
+Viewport
++-------------------------------+
+|                               |
+|    +===================+      |
+|    | Element           |      |
+|    | visible 30%       |      |  enter runs here
++----|-------------------|------+
+     | hidden 70%        |
+     |                   |
+     +===================+
+```
+
+Threshold values use whole percentages:
+
+| Desired visibility | Modifier |
+| --- | --- |
+| Any visible part | `threshold.0` |
+| 30% visible | `threshold.30` |
+| Half visible | `threshold.50` |
+| Fully visible | `threshold.100` |
+
+Use `enter` and `leave` when you want to move the viewport trigger line, usually to start earlier or later while scrolling vertically. The `threshold` still applies inside that adjusted observer area. If you want a simple "trigger when it crosses this adjusted line" behavior, pair the offset with `threshold.0`.
+
+`enter` changes the bottom edge of the observer viewport:
+
+```text
+enter.25.threshold.0
+
+Normal viewport
++-------------------------------+
+|                               |
+|                               |
++-------------------------------+  normal bottom edge
+|  +25% enter zone              |
+|    +===================+      |
+|    | Element           |      |  enter runs before visible
+|    +===================+      |
++-------------------------------+  adjusted bottom edge
+```
+
+```html
+<!-- Starts before the element reaches the visible viewport. -->
+<div x-anime.fade-up.enter.25.threshold.0>
+  Starts when it is within 25% of the viewport below the fold.
+</div>
+
+<!-- Starts later, after the element is deeper inside the viewport. -->
+<div x-anime.fade-up.enter.-20.threshold.0>
+  Starts after it has crossed 20% into the viewport.
+</div>
+```
+
+`leave` changes the top edge of the observer viewport. This only matters for repeating animations or presets with leave behavior, such as `fade-in-out`.
+
+```text
+leave.-10.threshold.0
+
+Adjusted top edge
++-------------------------------+
+|  -10% leave zone              |  leave runs earlier
++-------------------------------+  normal top edge
+|    +===================+      |
+|    | Element           |      |
+|    +===================+      |
+|                               |
++-------------------------------+
+```
+
+```html
+<!-- Leaves earlier as the element scrolls out through the top. -->
+<div x-anime.fade-in-out.leave.-10.threshold.0>
+  Fades out once it crosses the top 10% of the viewport.
+</div>
+
+<!-- Leaves later, after it has moved past the top edge. -->
+<div x-anime.fade-in-out.leave.120px.threshold.0>
+  Fades out 120px after passing the top of the viewport.
+</div>
+```
+
+```text
+leave.120px.threshold.0
+
+Normal top edge
++-------------------------------+
+|                               |
+|                               |
+|    +===================+      |
+|    | Element           |      |  still considered visible
+|    +===================+      |
++-------------------------------+
+|  +120px leave zone            |  leave runs after passing top
++-------------------------------+  adjusted top edge
+```
+
+`enter.30` does not mean "30% of the element is visible". It means "expand the bottom observer edge by 30% of the viewport". For "30% visible", use `threshold.30`.
 
 Supported margin values:
 
 | Format | Example | Result |
 | --- | --- | --- |
-| Plain number | `enter.120` | `120px` |
+| Plain number | `enter.25` | `25%` |
 | Pixels | `leave.80px` | `80px` |
-| Percent with `p` suffix | `enter.25p` | `25%` |
-| Negative percent | `leave.-10p` | `-10%` |
+| Negative percent | `leave.-10` | `-10%` |
 
 ## Easing Modifiers
 
@@ -246,15 +357,15 @@ Replay on re-entry:
 Start earlier:
 
 ```html
-<div x-anime.scale-in.enter.20p>
-  Starts when the viewport is within 20% of the element.
+<div x-anime.scale-in.enter.20>
+  Starts when the element is within 20% of the viewport below the fold.
 </div>
 ```
 
 Fade in and out:
 
 ```html
-<div x-anime.fade-in-out.enter.25p.leave.-10p>
+<div x-anime.fade-in-out.enter.25.leave.-10>
   Uses separate enter and leave animations.
 </div>
 ```
@@ -399,7 +510,7 @@ References:
 | `duration` | `800` |
 | `delay` | `0` |
 | `ease` | `out(2)` |
-| `threshold` | `0.2` |
+| `threshold` | `0` |
 | `replay` | `true` |
 | `enterMargin` | `0px` |
 | `leaveMargin` | `0px` |
@@ -408,7 +519,7 @@ References:
 
 - Unknown modifiers are ignored.
 - Invalid numeric values fall back to defaults.
-- `threshold` is clamped to `0..1`.
+- `threshold` modifiers are clamped to `0..100` and converted to the native `IntersectionObserver` `0..1` range.
 - The plugin uses native `IntersectionObserver`.
 - In environments without `IntersectionObserver`, enter animation falls back to immediate run.
 - If the user has `prefers-reduced-motion: reduce`, the plugin skips runtime animation and applies final visual state directly.

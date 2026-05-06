@@ -176,11 +176,11 @@
       <div class="feature-runway"></div>
 
       <section class="feature">
-        <div class="feature-image" x-anime.fade-in-out.enter.25p.leave.-10p.duration.1400></div>
+        <div class="feature-image" x-anime.fade-in-out.enter.25.leave.-10.duration.1400></div>
         <aside class="feature-copy" x-anime.fade.once.delay.120>
           <h2>Fade In + Fade Out</h2>
           <p>This example uses <code>x-anime.fade-in-out</code> to fade in when entering the viewport and fade out when leaving it.</p>
-          <p>It intentionally does not use <code>once</code>, so the enter/leave behavior repeats while scrolling. This demo also starts earlier using <code>enter.25p</code> and exits sooner using <code>leave.-10p</code>.</p>
+          <p>It intentionally does not use <code>once</code>, so the enter/leave behavior repeats while scrolling. This demo also starts earlier using <code>enter.25</code> and exits sooner using <code>leave.-10</code>.</p>
         </aside>
       </section>
 
@@ -220,11 +220,11 @@
       <div class="feature-runway"></div>
 
       <section class="feature">
-        <div class="feature-image alt-f" x-anime.fade-down.threshold.0_7.once.duration.1000></div>
+        <div class="feature-image alt-f" x-anime.fade-down.threshold.70.once.duration.1000></div>
         <aside class="feature-copy" x-anime.fade.once.delay.120>
           <h2>Fade Down + Threshold</h2>
-          <p><code>x-anime.fade-down</code> slides in from above. Pair it with <code>threshold.0_7</code> to hold the trigger until 70% of the element is visible.</p>
-          <p>Threshold accepts values from <code>0</code> (any pixel visible) to <code>1</code> (fully in view). The default is <code>0.2</code>.</p>
+          <p><code>x-anime.fade-down</code> slides in from above. Pair it with <code>threshold.70</code> to hold the trigger until 70% of the element is visible.</p>
+          <p>Threshold accepts whole percentages from <code>0</code> (any pixel visible) to <code>100</code> (fully in view). The default is <code>0</code>.</p>
         </aside>
       </section>
 

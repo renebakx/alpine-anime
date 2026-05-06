@@ -2,7 +2,7 @@ const DEFAULT_CONFIG = {
   duration: 800,
   delay: 0,
   ease: 'out(2)',
-  threshold: 0.2,
+  threshold: 0,
   replay: true,
   enterMargin: '0px',
   leaveMargin: '0px'
@@ -19,6 +19,13 @@ function parseNumber(value) {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function parseThreshold(value) {
+  const parsed = parseNumber(value);
+  if (!Number.isFinite(parsed)) return null;
+
+  return clamp(parsed, 0, 100) / 100;
 }
 
 function formatPowerEase(direction, value) {
@@ -48,7 +55,7 @@ function parseMargin(value) {
 
   const numeric = Number.parseFloat(raw);
   if (Number.isFinite(numeric)) {
-    return `${numeric}px`;
+    return `${numeric}%`;
   }
 
   return null;
@@ -75,8 +82,8 @@ export function parseModifiers(modifiers = []) {
     }
 
     if (modifier === 'threshold') {
-      const parsed = parseNumber(modifiers[index + 1]);
-      if (Number.isFinite(parsed)) config.threshold = clamp(parsed, 0, 1);
+      const parsed = parseThreshold(modifiers[index + 1]);
+      if (parsed !== null) config.threshold = parsed;
       index += 1;
       continue;
     }

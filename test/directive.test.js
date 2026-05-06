@@ -48,7 +48,7 @@ describe('directive', () => {
     const element = document.createElement('div');
     observeMock.mockImplementation((_, callback) => callback());
 
-    directive(element, { modifiers: ['fade-left', 'duration', '1200', 'delay', '200', 'threshold', '0_35', 'once'] });
+    directive(element, { modifiers: ['fade-left', 'duration', '1200', 'delay', '200', 'threshold', '35', 'once'] });
 
     expect(element.style.opacity).toBe('0');
     expect(element.style.transform).toBe('translateX(100px)');
