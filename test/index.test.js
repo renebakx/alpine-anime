@@ -10,4 +10,10 @@ describe('plugin entrypoint', () => {
     expect(directive).toHaveBeenCalledTimes(1);
     expect(directive).toHaveBeenCalledWith('anime', expect.any(Function));
   });
+
+  test('exposes the custom preset registry API on the plugin function', () => {
+    expect(typeof plugin.definePreset).toBe('function');
+    expect(typeof plugin.getPreset).toBe('function');
+    expect(typeof plugin.getPresetNames).toBe('function');
+  });
 });

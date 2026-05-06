@@ -6,7 +6,7 @@ describe('parseModifiers', () => {
     expect(parseModifiers(['unknown'])).toEqual({
       duration: 800,
       delay: 0,
-      ease: 'outQuad',
+      ease: 'out(2)',
       threshold: 0.2,
       replay: true,
       enterMargin: '0px',
@@ -18,7 +18,7 @@ describe('parseModifiers', () => {
     expect(parseModifiers(['fade-left', 'duration', '1200', 'delay', '200', 'threshold', '0_35'])).toEqual({
       duration: 1200,
       delay: 200,
-      ease: 'outQuad',
+      ease: 'out(2)',
       threshold: 0.35,
       replay: true,
       enterMargin: '0px',
@@ -30,7 +30,7 @@ describe('parseModifiers', () => {
     expect(parseModifiers(['duration', 'fast', 'delay', '-x', 'threshold', 'bad'])).toEqual({
       duration: 800,
       delay: 0,
-      ease: 'outQuad',
+      ease: 'out(2)',
       threshold: 0.2,
       replay: true,
       enterMargin: '0px',
@@ -56,6 +56,33 @@ describe('parseModifiers', () => {
     expect(parseModifiers(['start', '120', 'end', '80px'])).toMatchObject({
       enterMargin: '120px',
       leaveMargin: '80px'
+    });
+  });
+
+  test('parses named bezier easing modifiers', () => {
+    expect(parseModifiers(['ease', 'bezier-in'])).toMatchObject({
+      ease: 'cubicBezier(0.5, 0, 0.9, 0.3)'
+    });
+    expect(parseModifiers(['ease', 'bezier-out'])).toMatchObject({
+      ease: 'cubicBezier(0.1, 0.7, 0.5, 1)'
+    });
+  });
+
+  test('parses power easing modifiers using integer hundredths', () => {
+    expect(parseModifiers(['ease', 'power-in', '101'])).toMatchObject({
+      ease: 'in(1.01)'
+    });
+    expect(parseModifiers(['ease', 'power-out', '250'])).toMatchObject({
+      ease: 'out(2.5)'
+    });
+  });
+
+  test('clamps power easing values to the supported range', () => {
+    expect(parseModifiers(['ease', 'power-in', '12'])).toMatchObject({
+      ease: 'in(1)'
+    });
+    expect(parseModifiers(['ease', 'power-out', '2400'])).toMatchObject({
+      ease: 'out(10)'
     });
   });
 });

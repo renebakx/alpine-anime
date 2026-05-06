@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Alpine Anime Demo</title>
+    <title>Alpine.js meets AnimeJS Demo</title>
     <style>
       :root {
         color-scheme: light;
@@ -86,6 +86,24 @@
           radial-gradient(circle at 15% 20%, #4a8895 0%, #24535f 60%, #163640 100%);
       }
 
+      .feature-image.alt-c {
+        background:
+          linear-gradient(120deg, rgba(62, 83, 29, 0.42), rgba(62, 83, 29, 0.08)),
+          radial-gradient(circle at 20% 28%, #9aa76b 0%, #53622d 58%, #2f3d1d 100%);
+      }
+
+      .feature-image.alt-d {
+        background:
+          linear-gradient(120deg, rgba(111, 66, 42, 0.42), rgba(111, 66, 42, 0.08)),
+          radial-gradient(circle at 24% 18%, #c59b73 0%, #815331 58%, #4c2e1d 100%);
+      }
+
+      .feature-image.alt-e {
+        background:
+          linear-gradient(120deg, rgba(39, 44, 89, 0.4), rgba(39, 44, 89, 0.08)),
+          radial-gradient(circle at 28% 24%, #7f85ba 0%, #39406f 58%, #202646 100%);
+      }
+
       .feature-runway {
         min-height: 56vh;
       }
@@ -103,6 +121,12 @@
         font-size: 0.95rem;
       }
 
+      code {
+        border-radius: 0.35rem;
+        background: rgba(20, 54, 66, 0.08);
+        padding: 0.1rem 0.3rem;
+      }
+
       @media (min-width: 900px) {
         .feature {
           grid-template-columns: 2fr 1fr;
@@ -116,8 +140,8 @@
       <section class="hero">
         <div x-anime.fade-right.duration.1200>
           <p>Scroll down to trigger more presets.</p>
-          <h1>Alpine Anime</h1>
-          <p>A tiny Alpine plugin that uses modifier-based presets with Anime.js under the hood.</p>
+          <h1>Alpine.js meets AnimeJS</h1>
+          <p>A tiny scratch-my-own-itch plugin for adding AnimeJS easings and viewport reveal presets through <code>x-anime</code>. It is built with AI help and the "You can just do things" mantra, not as a full AnimeJS API wrapper.</p>
         </div>
       </section>
 
@@ -155,6 +179,39 @@
       <div class="feature-runway"></div>
 
       <section class="feature">
+        <div class="feature-image alt-c" x-anime.fade-up.once.duration.1000.ease.bezier-in></div>
+        <aside class="feature-copy" x-anime.fade-up.once.duration.1000.delay.120.ease.bezier-out>
+          <h2>Bezier In + Bezier Out</h2>
+          <p>The image uses <code>x-anime.fade-up.ease.bezier-in</code> for a deliberate start.</p>
+          <p>The copy uses <code>x-anime.fade-up.ease.bezier-out</code> for a softer finish.</p>
+        </aside>
+      </section>
+
+      <div class="feature-runway"></div>
+
+      <section class="feature">
+        <div class="feature-image alt-d" x-anime.scale-in.once.duration.900.ease.power-out.250></div>
+        <aside class="feature-copy" x-anime.fade-left.once.duration.1100.delay.120.ease.power-in.168>
+          <h2>Power Easing</h2>
+          <p><code>ease.power-out.250</code> maps to Anime.js <code>out(2.5)</code>.</p>
+          <p><code>ease.power-in.168</code> maps to Anime.js <code>in(1.68)</code>.</p>
+        </aside>
+      </section>
+
+      <div class="feature-runway"></div>
+
+      <section class="feature">
+        <div class="feature-image alt-e" x-anime.blur-up.once.duration.1000></div>
+        <aside class="feature-copy" x-anime.blur-up.once.duration.1000.delay.120>
+          <h2>Custom Preset</h2>
+          <p>The demo registers <code>blur-up</code> before Alpine starts.</p>
+          <p>Use it like a built-in preset with <code>x-anime.blur-up.once</code>.</p>
+        </aside>
+      </section>
+
+      <div class="feature-runway"></div>
+
+      <section class="feature">
         <div class="feature-image alt-b" x-anime.fade.once.duration.1200></div>
         <aside class="feature-copy" x-anime.fade-left.once.duration.1200.delay.100>
           <h2>Two-Column Viewport Test</h2>
@@ -173,6 +230,13 @@
     <script>
       document.addEventListener('alpine:init', () => {
         if (typeof window.AlpineAnime === 'function') {
+          window.AlpineAnime.definePreset('blur-up', {
+            opacity: [0, 1],
+            y: [24, 0],
+            filter: ['blur(12px)', 'blur(0px)'],
+            ease: 'cubicBezier(0.7, 0.1, 0.5, 0.9)'
+          });
+
           window.Alpine.plugin(window.AlpineAnime);
         }
       });

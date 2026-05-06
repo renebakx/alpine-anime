@@ -1,11 +1,16 @@
 const DEFAULT_CONFIG = {
   duration: 800,
   delay: 0,
-  ease: 'outQuad',
+  ease: 'out(2)',
   threshold: 0.2,
   replay: true,
   enterMargin: '0px',
   leaveMargin: '0px'
+};
+
+const BEZIER_EASES = {
+  'bezier-in': 'cubicBezier(0.5, 0, 0.9, 0.3)',
+  'bezier-out': 'cubicBezier(0.1, 0.7, 0.5, 1)'
 };
 
 function parseNumber(value) {
@@ -14,6 +19,14 @@ function parseNumber(value) {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function formatPowerEase(direction, value) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed)) return null;
+
+  const power = clamp(parsed, 100, 1000) / 100;
+  return `${direction}(${Number.parseFloat(power.toFixed(2))})`;
 }
 
 function parseMargin(value) {
@@ -62,6 +75,23 @@ export function parseModifiers(modifiers = []) {
     if (modifier === 'threshold') {
       const parsed = parseNumber(modifiers[index + 1]);
       if (Number.isFinite(parsed)) config.threshold = clamp(parsed, 0, 1);
+      continue;
+    }
+
+    if (modifier === 'ease') {
+      const name = modifiers[index + 1];
+
+      if (BEZIER_EASES[name]) {
+        config.ease = BEZIER_EASES[name];
+        continue;
+      }
+
+      if (name === 'power-in' || name === 'power-out') {
+        const parsed = formatPowerEase(name === 'power-in' ? 'in' : 'out', modifiers[index + 2]);
+        if (parsed !== null) config.ease = parsed;
+        continue;
+      }
+
       continue;
     }
 

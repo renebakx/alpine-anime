@@ -1,7 +1,32 @@
 import anime from './anime.js';
 import { observe } from './observer.js';
 import { parseModifiers } from './parser.js';
-import { getPreset, PRESET_NAMES } from './presets.js';
+import { getPreset } from './presets.js';
+
+const NON_STYLE_PROPERTIES = new Set(['duration', 'delay', 'ease', 'opacity', 'x', 'y', 'scale']);
+
+function getFrameValue(value, frame) {
+  if (!Array.isArray(value)) return value;
+  return frame === 'last' ? value[value.length - 1] : value[0];
+}
+
+function applyStyleValue(element, property, value) {
+  if (value === undefined || value === null) return;
+
+  if (property.includes('-')) {
+    element.style.setProperty(property, String(value));
+    return;
+  }
+
+  element.style[property] = String(value);
+}
+
+function applyAdditionalStyles(element, preset, frame) {
+  for (const [property, value] of Object.entries(preset)) {
+    if (NON_STYLE_PROPERTIES.has(property)) continue;
+    applyStyleValue(element, property, getFrameValue(value, frame));
+  }
+}
 
 function applyInitialStyles(element, preset) {
   if (preset.opacity) {
@@ -17,6 +42,8 @@ function applyInitialStyles(element, preset) {
   if (transforms.length > 0) {
     element.style.transform = transforms.join(' ');
   }
+
+  applyAdditionalStyles(element, preset, 'first');
 }
 
 function applyFinalStyles(element, preset) {
@@ -31,6 +58,7 @@ function applyFinalStyles(element, preset) {
   if (preset.scale) transforms.push(`scale(${preset.scale[preset.scale.length - 1]})`);
 
   element.style.transform = transforms.join(' ');
+  applyAdditionalStyles(element, preset, 'last');
 }
 
 function prefersReducedMotion() {
@@ -39,7 +67,7 @@ function prefersReducedMotion() {
 }
 
 export default function directive(element, { modifiers = [] }, { cleanup } = {}) {
-  const presetNames = modifiers.filter((modifier) => PRESET_NAMES.includes(modifier));
+  const presetNames = modifiers.filter((modifier) => Boolean(getPreset(modifier)));
 
   if (presetNames.length !== 1) {
     return;

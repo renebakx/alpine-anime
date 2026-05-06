@@ -14,11 +14,13 @@ vi.mock('../src/anime.js', () => ({
 }));
 
 import directive from '../src/directive.js';
+import { definePreset, resetPresets } from '../src/presets.js';
 
 describe('directive', () => {
   beforeEach(() => {
     observeMock.mockReset();
     animeMock.mockReset();
+    resetPresets();
     delete globalThis.matchMedia;
   });
 
@@ -66,7 +68,7 @@ describe('directive', () => {
       opacity: [0, 1],
       duration: 1200,
       delay: 200,
-      ease: 'outQuad'
+      ease: 'out(2)'
     });
   });
 
@@ -98,7 +100,7 @@ describe('directive', () => {
       opacity: [0, 1],
       duration: 800,
       delay: 0,
-      ease: 'outQuad'
+      ease: 'out(2)'
     });
   });
 
@@ -129,13 +131,13 @@ describe('directive', () => {
       opacity: [0, 1],
       duration: 800,
       delay: 0,
-      ease: 'outQuad'
+      ease: 'out(2)'
     });
     expect(animeMock).toHaveBeenNthCalledWith(2, element, {
       opacity: [1, 0],
       duration: 800,
       delay: 0,
-      ease: 'outQuad'
+      ease: 'out(2)'
     });
   });
 
@@ -152,7 +154,65 @@ describe('directive', () => {
       opacity: [0, 1],
       duration: 800,
       delay: 0,
-      ease: 'outQuad'
+      ease: 'out(2)'
     });
+  });
+
+  test('passes parsed easing modifiers to the WAAPI adapter', () => {
+    const element = document.createElement('div');
+    observeMock.mockImplementation((_, callback) => callback());
+
+    directive(element, { modifiers: ['fade-up', 'ease', 'power-out', '250'] });
+
+    expect(animeMock).toHaveBeenCalledWith(element, {
+      y: [50, 0],
+      opacity: [0, 1],
+      duration: 800,
+      delay: 0,
+      ease: 'out(2.5)'
+    });
+  });
+
+  test('supports custom presets with additional CSS properties', () => {
+    const element = document.createElement('div');
+    observeMock.mockImplementation((_, callback) => callback());
+    definePreset('blur-up', {
+      opacity: [0, 1],
+      y: [24, 0],
+      filter: ['blur(12px)', 'blur(0px)'],
+      ease: 'cubicBezier(0.7, 0.1, 0.5, 0.9)'
+    });
+
+    directive(element, { modifiers: ['blur-up', 'once'] });
+
+    expect(element.style.opacity).toBe('0');
+    expect(element.style.transform).toBe('translateY(24px)');
+    expect(element.style.filter).toBe('blur(12px)');
+    expect(animeMock).toHaveBeenCalledWith(element, {
+      opacity: [0, 1],
+      y: [24, 0],
+      filter: ['blur(12px)', 'blur(0px)'],
+      ease: 'cubicBezier(0.7, 0.1, 0.5, 0.9)',
+      duration: 800,
+      delay: 0
+    });
+  });
+
+  test('applies custom preset final styles for reduced motion', () => {
+    const element = document.createElement('div');
+    globalThis.matchMedia = () => ({ matches: true });
+    definePreset('blur-up', {
+      opacity: [0, 1],
+      y: [24, 0],
+      filter: ['blur(12px)', 'blur(0px)']
+    });
+
+    directive(element, { modifiers: ['blur-up', 'once'] });
+
+    expect(element.style.opacity).toBe('1');
+    expect(element.style.transform).toBe('translateY(0px)');
+    expect(element.style.filter).toBe('blur(0px)');
+    expect(observeMock).not.toHaveBeenCalled();
+    expect(animeMock).not.toHaveBeenCalled();
   });
 });

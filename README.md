@@ -1,8 +1,10 @@
-# alpine-anime
+# Alpine.js meets AnimeJS
 
-A small Alpine.js plugin that adds a headless `x-anime` directive for viewport-driven reveal animations.
+Alpine.js meets AnimeJS is a small, headless `x-anime` directive for viewport-driven reveal animations.
 
-The directive is powered by Anime.js 4 `waapi.animate()`. The goal is simple: drop it into a project, add an `x-anime` preset to an element, and get a working animation without writing custom CSS for that element.
+The focus is intentionally narrow: make AnimeJS easings and reveal presets easier to add through `IntersectionObserver`. Drop it into a project, add an `x-anime` preset to an element, and get a working animation without writing custom CSS for that element.
+
+This project does not try to implement the full AnimeJS API. It is a simple scratch-my-own-itch project, built with help from AI models and the "You can just do things" mantra.
 
 ## Quick Start
 
@@ -166,6 +168,10 @@ Modifiers are written as Alpine modifier tokens.
 | --- | --- | --- |
 | `duration.<ms>` | `duration.1200` | Animation duration in milliseconds |
 | `delay.<ms>` | `delay.150` | Enter animation delay in milliseconds |
+| `ease.bezier-in` | `ease.bezier-in` | Uses the built-in cubic-bezier in curve |
+| `ease.bezier-out` | `ease.bezier-out` | Uses the built-in cubic-bezier out curve |
+| `ease.power-in.<n>` | `ease.power-in.168` | Uses Anime.js `in(1.68)` |
+| `ease.power-out.<n>` | `ease.power-out.250` | Uses Anime.js `out(2.5)` |
 | `threshold.<ratio>` | `threshold.0_35` | Intersection threshold, clamped to `0..1` |
 | `once` | `once` | Animate on first enter, then stop observing |
 | `repeat` | `repeat` | Animate again after leaving and re-entering |
@@ -180,6 +186,44 @@ Supported margin values:
 | Pixels | `leave.80px` | `80px` |
 | Percent with `p` suffix | `enter.25p` | `25%` |
 | Negative percent | `leave.-10p` | `-10%` |
+
+## Easing Modifiers
+
+The default ease is `out(2)`, matching Anime.js' WAAPI default. For common tuning, use the `ease.*` modifier namespace.
+
+Bezier variants:
+
+```html
+<div x-anime.fade-up.ease.bezier-in></div>
+<div x-anime.fade-up.ease.bezier-out></div>
+```
+
+The built-in bezier aliases map to concrete WAAPI strings:
+
+| Modifier | Anime.js ease |
+| --- | --- |
+| `ease.bezier-in` | `cubicBezier(0.5, 0, 0.9, 0.3)` |
+| `ease.bezier-out` | `cubicBezier(0.1, 0.7, 0.5, 1)` |
+
+Power variants:
+
+```html
+<div x-anime.fade-left.ease.power-in.101></div>
+<div x-anime.fade-left.ease.power-out.250></div>
+```
+
+Power values use integer hundredths because Alpine modifiers split on dots. The directive divides the integer by `100` before passing it to Anime.js:
+
+| Modifier | Anime.js ease |
+| --- | --- |
+| `ease.power-in.101` | `in(1.01)` |
+| `ease.power-out.168` | `out(1.68)` |
+| `ease.power-out.250` | `out(2.5)` |
+| `ease.power-in.1000` | `in(10)` |
+
+Power values are clamped to `100..1000`, so the effective Anime.js range is `1..10`.
+
+Raw `x1`, `y1`, `x2`, and `y2` bezier modifier support is intentionally not included. Positional control-point modifiers are hard to read and easy to misorder. Use a custom preset when you need an exact curve.
 
 ## Scroll Behavior Examples
 
@@ -215,6 +259,53 @@ Fade in and out:
 </div>
 ```
 
+Custom ease:
+
+```html
+<div x-anime.scale-in.once.ease.power-out.250>
+  Uses Anime.js out(2.5).
+</div>
+```
+
+## Custom Presets
+
+The built-in presets cover common reveal patterns. For project-specific motion, register custom presets before `Alpine.plugin(AlpineAnime)`.
+
+```js
+import Alpine from 'alpinejs';
+import AlpineAnime from 'alpine-anime';
+
+AlpineAnime.definePreset('blur-up', {
+  opacity: [0, 1],
+  y: [24, 0],
+  filter: ['blur(12px)', 'blur(0px)'],
+  ease: 'cubicBezier(0.7, 0.1, 0.5, 0.9)'
+});
+
+Alpine.plugin(AlpineAnime);
+Alpine.start();
+```
+
+Then use the preset like any built-in preset:
+
+```html
+<article x-anime.blur-up.once.duration.900>
+  Custom preset reveal.
+</article>
+```
+
+Custom presets can define WAAPI-compatible CSS properties and transform shortcuts:
+
+| Property | Example | Notes |
+| --- | --- | --- |
+| `opacity` | `[0, 1]` | Initial/final inline states are applied automatically |
+| `x` / `y` | `[24, 0]` | Composed into `translateX(...)` / `translateY(...)` before animation |
+| `scale` | `[0.95, 1]` | Composed into `transform` before animation |
+| CSS properties | `filter: ['blur(12px)', 'blur(0px)']` | Applied as inline initial/final states for self-contained presets |
+| `ease` | `'cubicBezier(...)'` | Overrides the parsed/default ease for that preset |
+
+If a custom preset uses the same name as a built-in preset, it overrides the built-in preset for the current page bundle.
+
 ## Headless by Default
 
 The plugin does not ship CSS and does not require Tailwind. It only controls the animation-related inline styles for supported presets.
@@ -244,7 +335,7 @@ Tailwind 3.x or 4.x:
 
 ## WAAPI Runtime
 
-`alpine-anime` uses Anime.js 4's `waapi.animate()` adapter from `animejs/waapi`.
+Alpine.js meets AnimeJS uses Anime.js 4's `waapi.animate()` adapter from `animejs/waapi`.
 
 This is a good fit for the current presets because they animate CSS opacity and transforms. Anime.js documents WAAPI as a smaller path than the JavaScript `animate()` runtime and recommends it for CSS animations where page load size or CPU/network load matters.
 
@@ -257,7 +348,7 @@ References:
 
 ## Easing Support
 
-The directive currently uses the internal default `outQuad`. There is no public `ease.*` modifier yet because Alpine modifier syntax is not a clean fit for function arguments like springs or custom cubic curves.
+The directive uses `out(2)` by default and exposes common `ease.*` modifiers for bezier and power curves. Custom presets are the escape hatch for exact curves, springs, and project-specific motion.
 
 Anime.js 4 WAAPI can use these easing families:
 
@@ -268,7 +359,7 @@ Anime.js 4 WAAPI can use these easing families:
 | Cubic bezier strings | `cubic-bezier(0, 0, 0.58, 1)`, `cubicBezier(.7, .1, .5, .9)` | Supported |
 | Linear timing strings | `linear(0, 0.5 50%, 1)` | Supported |
 | Steps strings | `steps(5)`, `steps(5, start)` | Supported |
-| Function eases | `spring(...)`, `irregular(...)`, custom functions | Supported by Anime.js WAAPI, but not exposed as directive modifiers |
+| Function eases | `spring(...)`, `irregular(...)`, custom functions | Supported by Anime.js WAAPI through custom presets or direct runtime expansion |
 
 References:
 
@@ -285,7 +376,7 @@ References:
 | --- | --- |
 | `duration` | `800` |
 | `delay` | `0` |
-| `ease` | `outQuad` |
+| `ease` | `out(2)` |
 | `threshold` | `0.2` |
 | `replay` | `true` |
 | `enterMargin` | `0px` |
