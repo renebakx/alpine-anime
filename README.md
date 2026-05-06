@@ -269,7 +269,9 @@ Custom ease:
 
 ## Custom Presets
 
-The built-in presets cover common reveal patterns. For project-specific motion, register custom presets before `Alpine.plugin(AlpineAnime)`.
+The built-in presets cover common reveal patterns. For project-specific motion, you can register custom presets using `AlpineAnime.definePreset`.
+
+### ESM (Module Bundlers)
 
 ```js
 import Alpine from 'alpinejs';
@@ -284,6 +286,26 @@ AlpineAnime.definePreset('blur-up', {
 
 Alpine.plugin(AlpineAnime);
 Alpine.start();
+```
+
+### CDN (Browser)
+
+The CDN version automatically registers itself on `alpine:init`. You can define custom presets within your own `alpine:init` listener:
+
+```html
+<script defer src="https://unpkg.com/alpine-anime/dist/cdn.js"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<script>
+  document.addEventListener('alpine:init', () => {
+    window.AlpineAnime.definePreset('blur-up', {
+      opacity: [0, 1],
+      y: [24, 0],
+      filter: ['blur(12px)', 'blur(0px)'],
+      ease: 'cubicBezier(0.7, 0.1, 0.5, 0.9)'
+    });
+  });
+</script>
 ```
 
 Then use the preset like any built-in preset:
