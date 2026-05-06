@@ -1,3 +1,7 @@
-import anime from 'animejs/lib/anime.es.js';
+import { waapi } from 'animejs/waapi';
 
-export default anime;
+export function animate(targets, parameters) {
+  return waapi.animate(targets, parameters);
+}
+
+export default animate;

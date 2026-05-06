@@ -67,10 +67,6 @@
         box-shadow: 0 30px 80px rgba(20, 54, 66, 0.2);
       }
 
-      .pre-faded {
-        opacity: 0;
-      }
-
       .feature-copy {
         background: rgba(255, 255, 255, 0.72);
         border-radius: 1.5rem;
@@ -148,7 +144,7 @@
       <div class="feature-runway"></div>
 
       <section class="feature">
-        <div class="feature-image pre-faded" x-anime.fade-in-out.enter.25p.leave.-10p.duration.1400></div>
+        <div class="feature-image" x-anime.fade-in-out.enter.25p.leave.-10p.duration.1400></div>
         <aside class="feature-copy" x-anime.fade.once.delay.120>
           <h2>Fade In + Fade Out</h2>
           <p>This example uses <code>x-anime.fade-in-out</code> to fade in when entering the viewport and fade out when leaving it.</p>

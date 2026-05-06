@@ -61,13 +61,12 @@ describe('directive', () => {
         replay: false
       })
     );
-    expect(animeMock).toHaveBeenCalledWith({
-      targets: element,
-      translateX: [100, 0],
+    expect(animeMock).toHaveBeenCalledWith(element, {
+      x: [100, 0],
       opacity: [0, 1],
       duration: 1200,
       delay: 200,
-      easing: 'easeOutQuad'
+      ease: 'outQuad'
     });
   });
 
@@ -95,12 +94,11 @@ describe('directive', () => {
 
     expect(element.style.opacity).toBe('0');
     expect(element.style.transform).toBe('');
-    expect(animeMock).toHaveBeenCalledWith({
-      targets: element,
+    expect(animeMock).toHaveBeenCalledWith(element, {
       opacity: [0, 1],
       duration: 800,
       delay: 0,
-      easing: 'easeOutQuad'
+      ease: 'outQuad'
     });
   });
 
@@ -127,19 +125,34 @@ describe('directive', () => {
 
     expect(element.style.opacity).toBe('0');
     expect(element.style.transform).toBe('');
-    expect(animeMock).toHaveBeenNthCalledWith(1, {
-      targets: element,
+    expect(animeMock).toHaveBeenNthCalledWith(1, element, {
       opacity: [0, 1],
       duration: 800,
       delay: 0,
-      easing: 'easeOutQuad'
+      ease: 'outQuad'
     });
-    expect(animeMock).toHaveBeenNthCalledWith(2, {
-      targets: element,
+    expect(animeMock).toHaveBeenNthCalledWith(2, element, {
       opacity: [1, 0],
       duration: 800,
       delay: 0,
-      easing: 'easeOutQuad'
+      ease: 'outQuad'
+    });
+  });
+
+  test('uses WAAPI-compatible y transform parameters for vertical presets', () => {
+    const element = document.createElement('div');
+    observeMock.mockImplementation((_, callback) => callback());
+
+    directive(element, { modifiers: ['fade-up'] });
+
+    expect(element.style.opacity).toBe('0');
+    expect(element.style.transform).toBe('translateY(50px)');
+    expect(animeMock).toHaveBeenCalledWith(element, {
+      y: [50, 0],
+      opacity: [0, 1],
+      duration: 800,
+      delay: 0,
+      ease: 'outQuad'
     });
   });
 });

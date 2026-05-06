@@ -1,7 +1,7 @@
 const DEFAULT_CONFIG = {
   duration: 800,
   delay: 0,
-  easing: 'easeOutQuad',
+  ease: 'outQuad',
   threshold: 0.2,
   replay: true,
   enterMargin: '0px',

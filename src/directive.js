@@ -10,8 +10,8 @@ function applyInitialStyles(element, preset) {
 
   const transforms = [];
 
-  if (preset.translateX) transforms.push(`translateX(${preset.translateX[0]}px)`);
-  if (preset.translateY) transforms.push(`translateY(${preset.translateY[0]}px)`);
+  if (preset.x) transforms.push(`translateX(${preset.x[0]}px)`);
+  if (preset.y) transforms.push(`translateY(${preset.y[0]}px)`);
   if (preset.scale) transforms.push(`scale(${preset.scale[0]})`);
 
   if (transforms.length > 0) {
@@ -26,8 +26,8 @@ function applyFinalStyles(element, preset) {
 
   const transforms = [];
 
-  if (preset.translateX) transforms.push(`translateX(${preset.translateX[preset.translateX.length - 1]}px)`);
-  if (preset.translateY) transforms.push(`translateY(${preset.translateY[preset.translateY.length - 1]}px)`);
+  if (preset.x) transforms.push(`translateX(${preset.x[preset.x.length - 1]}px)`);
+  if (preset.y) transforms.push(`translateY(${preset.y[preset.y.length - 1]}px)`);
   if (preset.scale) transforms.push(`scale(${preset.scale[preset.scale.length - 1]})`);
 
   element.style.transform = transforms.join(' ');
@@ -67,12 +67,11 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
       activeAnimation.cancel();
     }
 
-    activeAnimation = anime({
-      targets: element,
+    activeAnimation = anime(element, {
       ...parameters,
       duration: parameters.duration ?? config.duration,
       delay: parameters.delay ?? config.delay,
-      easing: parameters.easing ?? config.easing
+      ease: parameters.ease ?? config.ease
     });
   };
 

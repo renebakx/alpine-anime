@@ -6,7 +6,7 @@ describe('parseModifiers', () => {
     expect(parseModifiers(['unknown'])).toEqual({
       duration: 800,
       delay: 0,
-      easing: 'easeOutQuad',
+      ease: 'outQuad',
       threshold: 0.2,
       replay: true,
       enterMargin: '0px',
@@ -18,7 +18,7 @@ describe('parseModifiers', () => {
     expect(parseModifiers(['fade-left', 'duration', '1200', 'delay', '200', 'threshold', '0_35'])).toEqual({
       duration: 1200,
       delay: 200,
-      easing: 'easeOutQuad',
+      ease: 'outQuad',
       threshold: 0.35,
       replay: true,
       enterMargin: '0px',
@@ -30,7 +30,7 @@ describe('parseModifiers', () => {
     expect(parseModifiers(['duration', 'fast', 'delay', '-x', 'threshold', 'bad'])).toEqual({
       duration: 800,
       delay: 0,
-      easing: 'easeOutQuad',
+      ease: 'outQuad',
       threshold: 0.2,
       replay: true,
       enterMargin: '0px',
