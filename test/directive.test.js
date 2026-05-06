@@ -19,6 +19,7 @@ describe('directive', () => {
   beforeEach(() => {
     observeMock.mockReset();
     animeMock.mockReset();
+    delete globalThis.matchMedia;
   });
 
   test('does nothing when no preset modifier is present', () => {
@@ -79,6 +80,66 @@ describe('directive', () => {
     directive(element, { modifiers: ['fade-up'] }, { cleanup });
 
     expect(cleanup).toHaveBeenCalledTimes(1);
-    expect(cleanup).toHaveBeenCalledWith(teardown);
+    const registeredCleanup = cleanup.mock.calls[0][0];
+    expect(typeof registeredCleanup).toBe('function');
+
+    registeredCleanup();
+    expect(teardown).toHaveBeenCalledTimes(1);
+  });
+
+  test('supports fade preset without applying slide transforms', () => {
+    const element = document.createElement('div');
+    observeMock.mockImplementation((_, callback) => callback());
+
+    directive(element, { modifiers: ['fade', 'once'] });
+
+    expect(element.style.opacity).toBe('0');
+    expect(element.style.transform).toBe('');
+    expect(animeMock).toHaveBeenCalledWith({
+      targets: element,
+      opacity: [0, 1],
+      duration: 800,
+      delay: 0,
+      easing: 'easeOutQuad'
+    });
+  });
+
+  test('respects prefers-reduced-motion and skips animation runtime', () => {
+    const element = document.createElement('div');
+    globalThis.matchMedia = () => ({ matches: true });
+
+    directive(element, { modifiers: ['fade-left', 'once'] });
+
+    expect(element.style.opacity).toBe('1');
+    expect(element.style.transform).toBe('translateX(0px)');
+    expect(observeMock).not.toHaveBeenCalled();
+    expect(animeMock).not.toHaveBeenCalled();
+  });
+
+  test('supports fade-in-out as enter/leave viewport behavior', () => {
+    const element = document.createElement('div');
+    observeMock.mockImplementation((_, handlers) => {
+      handlers.enter();
+      handlers.leave();
+    });
+
+    directive(element, { modifiers: ['fade-in-out'] });
+
+    expect(element.style.opacity).toBe('0');
+    expect(element.style.transform).toBe('');
+    expect(animeMock).toHaveBeenNthCalledWith(1, {
+      targets: element,
+      opacity: [0, 1],
+      duration: 800,
+      delay: 0,
+      easing: 'easeOutQuad'
+    });
+    expect(animeMock).toHaveBeenNthCalledWith(2, {
+      targets: element,
+      opacity: [1, 0],
+      duration: 800,
+      delay: 0,
+      easing: 'easeOutQuad'
+    });
   });
 });

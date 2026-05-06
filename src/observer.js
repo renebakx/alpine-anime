@@ -1,6 +1,27 @@
-export function observe(element, callback, config) {
+function normalizeHandlers(handlers) {
+  if (typeof handlers === 'function') {
+    return {
+      enter: handlers,
+      leave: undefined
+    };
+  }
+
+  return {
+    enter: handlers?.enter,
+    leave: handlers?.leave
+  };
+}
+
+export function observe(element, handlers, config) {
+  const { enter, leave } = normalizeHandlers(handlers);
+  const enterMargin = config?.enterMargin ?? '0px';
+  const leaveMargin = config?.leaveMargin ?? '0px';
+
   if (typeof IntersectionObserver !== 'function') {
-    callback({ isIntersecting: true, target: element });
+    if (typeof enter === 'function') {
+      enter({ isIntersecting: true, target: element });
+    }
+
     return () => {};
   }
 
@@ -11,6 +32,10 @@ export function observe(element, callback, config) {
       if (entry.target !== element) continue;
 
       if (!entry.isIntersecting) {
+        if (hasIntersected && typeof leave === 'function') {
+          leave(entry);
+        }
+
         hasIntersected = false;
         continue;
       }
@@ -20,14 +45,17 @@ export function observe(element, callback, config) {
       }
 
       hasIntersected = true;
-      callback(entry);
+      if (typeof enter === 'function') {
+        enter(entry);
+      }
 
       if (!config.replay) {
         observer.unobserve(element);
       }
     }
   }, {
-    threshold: config.threshold
+    threshold: config.threshold,
+    rootMargin: `${leaveMargin} 0px ${enterMargin} 0px`
   });
 
   observer.observe(element);

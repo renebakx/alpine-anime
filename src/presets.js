@@ -1,4 +1,6 @@
 const PRESETS = {
+  fade: { opacity: [0, 1] },
+  'fade-in-out': { opacity: [0, 1] },
   'fade-right': { translateX: [-100, 0], opacity: [0, 1] },
   'fade-left': { translateX: [100, 0], opacity: [0, 1] },
   'fade-up': { translateY: [50, 0], opacity: [0, 1] },

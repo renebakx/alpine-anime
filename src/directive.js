@@ -19,6 +19,25 @@ function applyInitialStyles(element, preset) {
   }
 }
 
+function applyFinalStyles(element, preset) {
+  if (preset.opacity) {
+    element.style.opacity = String(preset.opacity[preset.opacity.length - 1]);
+  }
+
+  const transforms = [];
+
+  if (preset.translateX) transforms.push(`translateX(${preset.translateX[preset.translateX.length - 1]}px)`);
+  if (preset.translateY) transforms.push(`translateY(${preset.translateY[preset.translateY.length - 1]}px)`);
+  if (preset.scale) transforms.push(`scale(${preset.scale[preset.scale.length - 1]})`);
+
+  element.style.transform = transforms.join(' ');
+}
+
+function prefersReducedMotion() {
+  if (typeof globalThis.matchMedia !== 'function') return false;
+  return globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 export default function directive(element, { modifiers = [] }, { cleanup } = {}) {
   const presetNames = modifiers.filter((modifier) => PRESET_NAMES.includes(modifier));
 
@@ -33,19 +52,46 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
   }
 
   const config = parseModifiers(modifiers);
+
+  if (prefersReducedMotion()) {
+    applyFinalStyles(element, preset);
+    return;
+  }
+
   applyInitialStyles(element, preset);
 
-  const teardown = observe(element, () => {
-    anime({
+  let activeAnimation;
+
+  const animateWithConfig = (parameters) => {
+    if (activeAnimation && typeof activeAnimation.cancel === 'function') {
+      activeAnimation.cancel();
+    }
+
+    activeAnimation = anime({
       targets: element,
-      ...preset,
-      duration: config.duration,
-      delay: config.delay,
-      easing: config.easing
+      ...parameters,
+      duration: parameters.duration ?? config.duration,
+      delay: parameters.delay ?? config.delay,
+      easing: parameters.easing ?? config.easing
     });
-  }, config);
+  };
+
+  const teardown = presetNames[0] === 'fade-in-out'
+    ? observe(element, {
+      enter: () => animateWithConfig({ opacity: [0, 1] }),
+      leave: () => animateWithConfig({ opacity: [1, 0], delay: 0 })
+    }, config)
+    : observe(element, () => {
+      animateWithConfig(preset);
+    }, config);
 
   if (typeof cleanup === 'function') {
-    cleanup(teardown);
+    cleanup(() => {
+      if (activeAnimation && typeof activeAnimation.cancel === 'function') {
+        activeAnimation.cancel();
+      }
+
+      teardown();
+    });
   }
 }

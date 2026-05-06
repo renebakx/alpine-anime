@@ -27,7 +27,10 @@ describe('observe', () => {
     observe(element, callback, { threshold: 0.35, replay: true });
     instance.callback([{ isIntersecting: true, target: element }]);
 
-    expect(ObserverMock).toHaveBeenCalledWith(expect.any(Function), { threshold: 0.35 });
+    expect(ObserverMock).toHaveBeenCalledWith(expect.any(Function), {
+      threshold: 0.35,
+      rootMargin: '0px 0px 0px 0px'
+    });
     expect(instance.observe).toHaveBeenCalledWith(element);
     expect(callback).toHaveBeenCalledTimes(1);
   });
@@ -53,6 +56,36 @@ describe('observe', () => {
     instance.callback([{ isIntersecting: true, target: element }]);
 
     expect(callback).toHaveBeenCalledTimes(2);
+  });
+
+  test('supports separate enter and leave handlers', () => {
+    const element = document.createElement('div');
+    const onEnter = vi.fn();
+    const onLeave = vi.fn();
+
+    observe(element, { enter: onEnter, leave: onLeave }, { threshold: 0.2, replay: true });
+    instance.callback([{ isIntersecting: true, target: element }]);
+    instance.callback([{ isIntersecting: false, target: element }]);
+
+    expect(onEnter).toHaveBeenCalledTimes(1);
+    expect(onLeave).toHaveBeenCalledTimes(1);
+  });
+
+  test('applies configurable enter and leave root margins', () => {
+    const element = document.createElement('div');
+    const callback = vi.fn();
+
+    observe(element, callback, {
+      threshold: 0.2,
+      replay: true,
+      enterMargin: '25%',
+      leaveMargin: '-10%'
+    });
+
+    expect(ObserverMock).toHaveBeenCalledWith(expect.any(Function), {
+      threshold: 0.2,
+      rootMargin: '-10% 0px 25% 0px'
+    });
   });
 
   test('unobserves after the first successful run when replay is disabled', () => {

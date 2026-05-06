@@ -8,7 +8,9 @@ describe('parseModifiers', () => {
       delay: 0,
       easing: 'easeOutQuad',
       threshold: 0.2,
-      replay: true
+      replay: true,
+      enterMargin: '0px',
+      leaveMargin: '0px'
     });
   });
 
@@ -18,7 +20,9 @@ describe('parseModifiers', () => {
       delay: 200,
       easing: 'easeOutQuad',
       threshold: 0.35,
-      replay: true
+      replay: true,
+      enterMargin: '0px',
+      leaveMargin: '0px'
     });
   });
 
@@ -28,7 +32,9 @@ describe('parseModifiers', () => {
       delay: 0,
       easing: 'easeOutQuad',
       threshold: 0.2,
-      replay: true
+      replay: true,
+      enterMargin: '0px',
+      leaveMargin: '0px'
     });
   });
 
@@ -40,5 +46,16 @@ describe('parseModifiers', () => {
   test('uses the last replay modifier when once and repeat both appear', () => {
     expect(parseModifiers(['once', 'repeat'])).toMatchObject({ replay: true });
     expect(parseModifiers(['repeat', 'once'])).toMatchObject({ replay: false });
+  });
+
+  test('parses enter and leave viewport margins', () => {
+    expect(parseModifiers(['enter', '25p', 'leave', '-10p'])).toMatchObject({
+      enterMargin: '25%',
+      leaveMargin: '-10%'
+    });
+    expect(parseModifiers(['start', '120', 'end', '80px'])).toMatchObject({
+      enterMargin: '120px',
+      leaveMargin: '80px'
+    });
   });
 });

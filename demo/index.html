@@ -40,10 +40,7 @@
       }
 
       .cards {
-        display: grid;
-        gap: 1.5rem;
-        padding: 6rem 0 10rem;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        display: none;
       }
 
       .card {
@@ -52,6 +49,69 @@
         background: rgba(255, 255, 255, 0.72);
         backdrop-filter: blur(18px);
         box-shadow: 0 25px 60px rgba(20, 54, 66, 0.12);
+      }
+
+      .feature {
+        display: grid;
+        gap: 2rem;
+        margin-top: 6rem;
+        margin-bottom: 0;
+      }
+
+      .feature-image {
+        border-radius: 1.5rem;
+        min-height: 360px;
+        background:
+          linear-gradient(120deg, rgba(20, 54, 66, 0.42), rgba(20, 54, 66, 0.08)),
+          radial-gradient(circle at 20% 20%, #4f6f76 0%, #143642 60%, #0e2229 100%);
+        box-shadow: 0 30px 80px rgba(20, 54, 66, 0.2);
+      }
+
+      .pre-faded {
+        opacity: 0;
+      }
+
+      .feature-copy {
+        background: rgba(255, 255, 255, 0.72);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        box-shadow: 0 25px 60px rgba(20, 54, 66, 0.12);
+      }
+
+      .feature-image.alt-a {
+        background:
+          linear-gradient(120deg, rgba(101, 30, 49, 0.45), rgba(101, 30, 49, 0.08)),
+          radial-gradient(circle at 30% 30%, #8f5a6f 0%, #5f2438 62%, #3c1422 100%);
+      }
+
+      .feature-image.alt-b {
+        background:
+          linear-gradient(120deg, rgba(19, 74, 85, 0.42), rgba(19, 74, 85, 0.08)),
+          radial-gradient(circle at 15% 20%, #4a8895 0%, #24535f 60%, #163640 100%);
+      }
+
+      .feature-runway {
+        min-height: 56vh;
+      }
+
+      .page-end {
+        min-height: 70vh;
+        display: grid;
+        align-items: end;
+        padding-bottom: 4rem;
+      }
+
+      .page-end p {
+        margin: 0;
+        opacity: 0.7;
+        font-size: 0.95rem;
+      }
+
+      @media (min-width: 900px) {
+        .feature {
+          grid-template-columns: 2fr 1fr;
+          align-items: center;
+        }
       }
     </style>
   </head>
@@ -65,24 +125,51 @@
         </div>
       </section>
 
-      <section class="cards">
-        <article class="card" x-anime.fade-left.duration.900>
-          <h2>Fade Left</h2>
-          <p>This card starts offset to the right and slides into place.</p>
-        </article>
-        <article class="card" x-anime.fade-right.duration.900.delay.100>
-          <h2>Fade Right</h2>
-          <p>This card starts offset to the left and arrives a beat later.</p>
-        </article>
-        <article class="card" x-anime.fade-up.delay.150.once>
-          <h2>Fade Up Once</h2>
-          <p>This card animates only on the first viewport entry.</p>
-        </article>
-        <article class="card" x-anime.scale-in.threshold.0_35.repeat>
-          <h2>Scale In Repeat</h2>
-          <p>This card replays after it leaves and re-enters the viewport.</p>
-        </article>
+      <section class="feature">
+        <div class="feature-image" x-anime.fade.once></div>
+        <aside class="feature-copy" x-anime.fade-left.once.duration.1100>
+          <h2>Fade Once + Slide Left</h2>
+          <p>Use <code>x-anime.fade.once</code> for fade-in without movement.</p>
+          <p>Use <code>x-anime.fade-left.once</code> to slide in from the right and stay visible.</p>
+        </aside>
       </section>
+
+      <div class="feature-runway"></div>
+
+      <section class="feature">
+        <div class="feature-image alt-a" x-anime.fade-right.once.duration.1100></div>
+        <aside class="feature-copy" x-anime.fade.once.delay.120>
+          <h2>Slide Right + Fade Once</h2>
+          <p>The image block starts from the left and settles in place only once.</p>
+          <p>The text block uses a pure one-time fade for an accessible, lower-motion pairing.</p>
+        </aside>
+      </section>
+
+      <div class="feature-runway"></div>
+
+      <section class="feature">
+        <div class="feature-image pre-faded" x-anime.fade-in-out.enter.25p.leave.-10p.duration.1400></div>
+        <aside class="feature-copy" x-anime.fade.once.delay.120>
+          <h2>Fade In + Fade Out</h2>
+          <p>This example uses <code>x-anime.fade-in-out</code> to fade in when entering the viewport and fade out when leaving it.</p>
+          <p>It intentionally does not use <code>once</code>, so the enter/leave behavior repeats while scrolling. This demo also starts earlier using <code>enter.25p</code> and exits sooner using <code>leave.-10p</code>.</p>
+        </aside>
+      </section>
+
+      <div class="feature-runway"></div>
+
+      <section class="feature">
+        <div class="feature-image alt-b" x-anime.fade.once.duration.1200></div>
+        <aside class="feature-copy" x-anime.fade-left.once.duration.1200.delay.100>
+          <h2>Two-Column Viewport Test</h2>
+          <p>This section is intentionally lower on the page so you can watch both columns animate when fully visible.</p>
+          <p>All examples here are <code>once</code> to mirror real content reveal behavior.</p>
+        </aside>
+      </section>
+
+      <footer class="page-end">
+        <p>Footer runway added so the last section can complete while still in viewport.</p>
+      </footer>
     </main>
 
     <script defer src="../dist/cdn.js"></script>
