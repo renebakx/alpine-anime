@@ -4,7 +4,7 @@ Alpine.js meets AnimeJS is a small, headless `x-anime` directive for viewport-dr
 
 The focus is intentionally narrow: make AnimeJS easings and reveal presets easier to add through `IntersectionObserver`. Drop it into a project, add an `x-anime` preset to an element, and get a working animation without writing custom CSS for that element.
 
-This project does not try to implement the full AnimeJS API. It is a simple scratch-my-own-itch project, built with help from AI models and the "You can just do things" mantra.
+This project does not try to implement the full AnimeJS API. It keeps the API small and preset-based, so it stays easy to use in normal HTML templates.
 
 ## Quick Start
 
@@ -14,7 +14,7 @@ This project does not try to implement the full AnimeJS API. It is a simple scra
 npm install alpine-anime alpinejs
 ```
 
-This repository's local setup still uses:
+For local development in this repository:
 
 ```bash
 npm install
@@ -43,16 +43,13 @@ Alpine.start();
 ```html
 <script defer src="/dist/cdn.js"></script>
 <script defer src="/node_modules/alpinejs/dist/cdn.min.js"></script>
-<script>
-  document.addEventListener('alpine:init', () => {
-    window.Alpine.plugin(window.AlpineAnime);
-  });
-</script>
 ```
+
+The CDN build registers itself on Alpine's `alpine:init` event.
 
 ## No Extra CSS Required
 
-Supported presets are self-contained after Alpine initializes. The directive applies the initial inline opacity/transform state, observes the element, and runs the WAAPI animation when the element enters the viewport.
+Supported presets are self-contained after Alpine initializes. For elements below the viewport, the directive applies the initial inline opacity/transform state, observes the element, and runs the WAAPI animation when the element enters the viewport.
 
 You do not need per-element CSS like this:
 
@@ -72,7 +69,7 @@ Use the directive instead:
 </article>
 ```
 
-The only caveat is first paint. If an element must be hidden before JavaScript starts, use a project-level strategy such as Alpine's `x-cloak`. That is optional flash prevention, not animation CSS per element.
+One caveat is first paint. If an element must be hidden before JavaScript starts, use a project-level strategy such as Alpine's `x-cloak`. This is optional flash prevention, not animation CSS per element.
 
 ```html
 <style>
@@ -86,9 +83,59 @@ The only caveat is first paint. If an element must be hidden before JavaScript s
 </div>
 ```
 
+## Startup Visibility
+
+The directive checks the element position when Alpine initializes. If the element is already visible in the viewport, the directive treats it as first-screen content.
+
+First-screen content should not slide, scale, or blur from an off-screen state. That can look broken because the user already sees the element. Instead, the directive applies the final preset styles immediately and only runs the opacity part of the preset.
+
+For example:
+
+```html
+<div x-anime.fade-up.once.threshold.20>
+  First-screen image or card.
+</div>
+```
+
+If this element is already in the viewport on page load:
+
+```text
+Applied immediately:
+- transform: translateY(0px)
+- opacity: 0
+
+Animated:
+- opacity: 0 -> 1
+```
+
+So the element fades in where it already belongs. It does not move up from `translateY(50px)`.
+
+If the same element starts below the viewport, the full preset still runs when it enters:
+
+```text
+Initial state below viewport:
+- transform: translateY(50px)
+- opacity: 0
+
+Animated on enter:
+- transform: translateY(50px) -> translateY(0px)
+- opacity: 0 -> 1
+```
+
+The startup visibility check is intentionally simple:
+
+- It uses `checkVisibility()` when the browser supports it.
+- It falls back to computed style checks for `display`, `visibility`, and `opacity`.
+- It checks whether the element overlaps the current viewport.
+- It does not use `threshold`, `enter`, or `leave`.
+
+`threshold`, `enter`, and `leave` only control the `IntersectionObserver` behavior after startup. This means `threshold.20` can still control scroll-triggered entry, but it does not hide an element that is already visible when the page renders.
+
+`fade-in-out` is the exception to the "stop after startup" rule. If a `fade-in-out` element is visible at startup, it fades in at its final position and keeps observing so the leave animation can run later.
+
 ## Presets
 
-Exactly one preset modifier is required. If none or multiple presets are present, the directive no-ops.
+Exactly one preset modifier is required. If none or multiple presets are present, the directive does nothing.
 
 ### `fade`
 
@@ -419,6 +466,8 @@ The CDN version automatically registers itself on `alpine:init`. You can define 
 </script>
 ```
 
+Register custom presets before Alpine starts. The example above works because the inline script is parsed before the deferred Alpine script runs.
+
 Then use the preset like any built-in preset:
 
 ```html
@@ -520,7 +569,9 @@ References:
 - Unknown modifiers are ignored.
 - Invalid numeric values fall back to defaults.
 - `threshold` modifiers are clamped to `0..100` and converted to the native `IntersectionObserver` `0..1` range.
-- Elements already visible in the viewport when Alpine initializes are shown in their final state without running the enter animation.
+- Startup visibility is checked directly with `checkVisibility()` when available, a computed-style fallback, and the element's current viewport overlap.
+- Elements already in view get final preset styles immediately and then run an opacity-only fade. They do not run the movement, scale, or blur part of the enter animation.
+- The `threshold`, `enter`, and `leave` modifiers only affect `IntersectionObserver` behavior after startup; they do not change the startup visibility check.
 - `fade-in-out` still observes initially visible elements so the leave animation can run when they exit the viewport.
 - The plugin uses native `IntersectionObserver`.
 - In environments without `IntersectionObserver`, enter animation falls back to immediate run.
