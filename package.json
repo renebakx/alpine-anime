@@ -13,7 +13,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "vite build",
+    "build": "vite build && vite build --mode cdn && vite build --mode debug",
     "test": "vitest run"
   },
   "peerDependencies": {

@@ -259,6 +259,8 @@
     <script defer src="../node_modules/alpinejs/dist/cdn.min.js"></script>
     <script>
       document.addEventListener('alpine:init', () => {
+        // window.AlpineAnime is automatically registered as a plugin.
+        // You can still use it to define custom presets.
         if (typeof window.AlpineAnime === 'function') {
           window.AlpineAnime.definePreset('blur-up', {
             opacity: [0, 1],
@@ -266,8 +268,6 @@
             filter: ['blur(12px)', 'blur(0px)'],
             ease: 'cubicBezier(0.7, 0.1, 0.5, 0.9)'
           });
-
-          window.Alpine.plugin(window.AlpineAnime);
         }
       });
     </script>
