@@ -158,6 +158,57 @@ describe('directive', () => {
     });
   });
 
+  test('fade-right applies negative x translate and animates correctly', () => {
+    const element = document.createElement('div');
+    observeMock.mockImplementation((_, callback) => callback());
+
+    directive(element, { modifiers: ['fade-right'] });
+
+    expect(element.style.opacity).toBe('0');
+    expect(element.style.transform).toBe('translateX(-100px)');
+    expect(animeMock).toHaveBeenCalledWith(element, {
+      x: [-100, 0],
+      opacity: [0, 1],
+      duration: 800,
+      delay: 0,
+      ease: 'out(2)'
+    });
+  });
+
+  test('fade-down applies negative y translate and animates correctly', () => {
+    const element = document.createElement('div');
+    observeMock.mockImplementation((_, callback) => callback());
+
+    directive(element, { modifiers: ['fade-down'] });
+
+    expect(element.style.opacity).toBe('0');
+    expect(element.style.transform).toBe('translateY(-50px)');
+    expect(animeMock).toHaveBeenCalledWith(element, {
+      y: [-50, 0],
+      opacity: [0, 1],
+      duration: 800,
+      delay: 0,
+      ease: 'out(2)'
+    });
+  });
+
+  test('scale-in applies initial scale and animates correctly', () => {
+    const element = document.createElement('div');
+    observeMock.mockImplementation((_, callback) => callback());
+
+    directive(element, { modifiers: ['scale-in'] });
+
+    expect(element.style.opacity).toBe('0');
+    expect(element.style.transform).toBe('scale(0.9)');
+    expect(animeMock).toHaveBeenCalledWith(element, {
+      scale: [0.9, 1],
+      opacity: [0, 1],
+      duration: 800,
+      delay: 0,
+      ease: 'out(2)'
+    });
+  });
+
   test('passes parsed easing modifiers to the WAAPI adapter', () => {
     const element = document.createElement('div');
     observeMock.mockImplementation((_, callback) => callback());

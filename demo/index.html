@@ -39,10 +39,6 @@
         font-size: 1.125rem;
       }
 
-      .cards {
-        display: none;
-      }
-
       .card {
         padding: 2rem;
         border-radius: 1.5rem;
@@ -102,6 +98,18 @@
         background:
           linear-gradient(120deg, rgba(39, 44, 89, 0.4), rgba(39, 44, 89, 0.08)),
           radial-gradient(circle at 28% 24%, #7f85ba 0%, #39406f 58%, #202646 100%);
+      }
+
+      .feature-image.alt-f {
+        background:
+          linear-gradient(120deg, rgba(70, 30, 90, 0.42), rgba(70, 30, 90, 0.08)),
+          radial-gradient(circle at 22% 22%, #9b7ab5 0%, #5a3477 60%, #35194a 100%);
+      }
+
+      .feature-image.alt-g {
+        background:
+          linear-gradient(120deg, rgba(10, 70, 50, 0.42), rgba(10, 70, 50, 0.08)),
+          radial-gradient(circle at 18% 25%, #5aa886 0%, #2d7058 60%, #163d32 100%);
       }
 
       .feature-runway {
@@ -206,6 +214,28 @@
           <h2>Custom Preset</h2>
           <p>The demo registers <code>blur-up</code> before Alpine starts.</p>
           <p>Use it like a built-in preset with <code>x-anime.blur-up.once</code>.</p>
+        </aside>
+      </section>
+
+      <div class="feature-runway"></div>
+
+      <section class="feature">
+        <div class="feature-image alt-f" x-anime.fade-down.threshold.0_7.once.duration.1000></div>
+        <aside class="feature-copy" x-anime.fade.once.delay.120>
+          <h2>Fade Down + Threshold</h2>
+          <p><code>x-anime.fade-down</code> slides in from above. Pair it with <code>threshold.0_7</code> to hold the trigger until 70% of the element is visible.</p>
+          <p>Threshold accepts values from <code>0</code> (any pixel visible) to <code>1</code> (fully in view). The default is <code>0.2</code>.</p>
+        </aside>
+      </section>
+
+      <div class="feature-runway"></div>
+
+      <section class="feature">
+        <div class="feature-image alt-g" x-anime.fade-right.repeat.duration.1000></div>
+        <aside class="feature-copy" x-anime.fade-left.repeat.duration.1000.delay.120>
+          <h2>Repeat</h2>
+          <p>Add <code>repeat</code> to re-run the animation every time the element scrolls back into view. This is actually the default — <code>once</code> is the opt-out.</p>
+          <p>Scroll up and back down to watch both columns animate again.</p>
         </aside>
       </section>
 

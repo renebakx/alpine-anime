@@ -63,18 +63,21 @@ export function parseModifiers(modifiers = []) {
     if (modifier === 'duration') {
       const parsed = parseNumber(modifiers[index + 1]);
       if (Number.isFinite(parsed)) config.duration = parsed;
+      index += 1;
       continue;
     }
 
     if (modifier === 'delay') {
       const parsed = parseNumber(modifiers[index + 1]);
       if (Number.isFinite(parsed)) config.delay = parsed;
+      index += 1;
       continue;
     }
 
     if (modifier === 'threshold') {
       const parsed = parseNumber(modifiers[index + 1]);
       if (Number.isFinite(parsed)) config.threshold = clamp(parsed, 0, 1);
+      index += 1;
       continue;
     }
 
@@ -83,12 +86,14 @@ export function parseModifiers(modifiers = []) {
 
       if (BEZIER_EASES[name]) {
         config.ease = BEZIER_EASES[name];
+        index += 1;
         continue;
       }
 
       if (name === 'power-in' || name === 'power-out') {
         const parsed = formatPowerEase(name === 'power-in' ? 'in' : 'out', modifiers[index + 2]);
         if (parsed !== null) config.ease = parsed;
+        index += 2;
         continue;
       }
 
@@ -108,12 +113,14 @@ export function parseModifiers(modifiers = []) {
     if (modifier === 'enter' || modifier === 'start') {
       const parsed = parseMargin(modifiers[index + 1]);
       if (parsed !== null) config.enterMargin = parsed;
+      index += 1;
       continue;
     }
 
     if (modifier === 'leave' || modifier === 'end') {
       const parsed = parseMargin(modifiers[index + 1]);
       if (parsed !== null) config.leaveMargin = parsed;
+      index += 1;
     }
   }
 

@@ -28,37 +28,19 @@ function applyAdditionalStyles(element, preset, frame) {
   }
 }
 
-function applyInitialStyles(element, preset) {
+function applyStyles(element, preset, frame) {
   if (preset.opacity) {
-    element.style.opacity = String(preset.opacity[0]);
+    element.style.opacity = String(getFrameValue(preset.opacity, frame));
   }
 
   const transforms = [];
 
-  if (preset.x) transforms.push(`translateX(${preset.x[0]}px)`);
-  if (preset.y) transforms.push(`translateY(${preset.y[0]}px)`);
-  if (preset.scale) transforms.push(`scale(${preset.scale[0]})`);
-
-  if (transforms.length > 0) {
-    element.style.transform = transforms.join(' ');
-  }
-
-  applyAdditionalStyles(element, preset, 'first');
-}
-
-function applyFinalStyles(element, preset) {
-  if (preset.opacity) {
-    element.style.opacity = String(preset.opacity[preset.opacity.length - 1]);
-  }
-
-  const transforms = [];
-
-  if (preset.x) transforms.push(`translateX(${preset.x[preset.x.length - 1]}px)`);
-  if (preset.y) transforms.push(`translateY(${preset.y[preset.y.length - 1]}px)`);
-  if (preset.scale) transforms.push(`scale(${preset.scale[preset.scale.length - 1]})`);
+  if (preset.x) transforms.push(`translateX(${getFrameValue(preset.x, frame)}px)`);
+  if (preset.y) transforms.push(`translateY(${getFrameValue(preset.y, frame)}px)`);
+  if (preset.scale) transforms.push(`scale(${getFrameValue(preset.scale, frame)})`);
 
   element.style.transform = transforms.join(' ');
-  applyAdditionalStyles(element, preset, 'last');
+  applyAdditionalStyles(element, preset, frame);
 }
 
 function prefersReducedMotion() {
@@ -74,19 +56,14 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
   }
 
   const preset = getPreset(presetNames[0]);
-
-  if (!preset) {
-    return;
-  }
-
   const config = parseModifiers(modifiers);
 
   if (prefersReducedMotion()) {
-    applyFinalStyles(element, preset);
+    applyStyles(element, preset, 'last');
     return;
   }
 
-  applyInitialStyles(element, preset);
+  applyStyles(element, preset, 'first');
 
   let activeAnimation;
 
