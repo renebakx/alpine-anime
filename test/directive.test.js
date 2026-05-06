@@ -74,7 +74,7 @@ describe('directive', () => {
     });
   });
 
-  test('shows an initially visible once element without observing for a later enter animation', () => {
+  test('fades an initially visible once element without observing for a later enter animation', () => {
     const element = document.createElement('div');
     element.getBoundingClientRect = () => ({
       top: 100,
@@ -87,12 +87,17 @@ describe('directive', () => {
 
     directive(element, { modifiers: ['fade', 'once', 'threshold', '20'] });
 
-    expect(element.style.opacity).toBe('1');
+    expect(element.style.opacity).toBe('0');
     expect(observeMock).not.toHaveBeenCalled();
-    expect(animeMock).not.toHaveBeenCalled();
+    expect(animeMock).toHaveBeenCalledWith(element, {
+      opacity: [0, 1],
+      duration: 800,
+      delay: 0,
+      ease: 'out(2)'
+    });
   });
 
-  test('shows an initially visible zero-height media wrapper without waiting for scroll', () => {
+  test('does not treat a zero-height wrapper as visible at startup', () => {
     const element = document.createElement('div');
     element.getBoundingClientRect = () => ({
       top: 420,
@@ -105,12 +110,55 @@ describe('directive', () => {
 
     directive(element, { modifiers: ['fade', 'once', 'threshold', '20'] });
 
-    expect(element.style.opacity).toBe('1');
-    expect(observeMock).not.toHaveBeenCalled();
+    expect(element.style.opacity).toBe('0');
+    expect(observeMock).toHaveBeenCalledTimes(1);
     expect(animeMock).not.toHaveBeenCalled();
   });
 
-  test('shows an initially visible repeating element and tracks later viewport changes', () => {
+  test('does not finalize initially intersecting elements hidden by checkVisibility', () => {
+    const element = document.createElement('div');
+    element.checkVisibility = vi.fn(() => false);
+    element.getBoundingClientRect = () => ({
+      top: 100,
+      left: 100,
+      right: 300,
+      bottom: 300,
+      width: 200,
+      height: 200
+    });
+
+    directive(element, { modifiers: ['fade', 'once', 'threshold', '20'] });
+
+    expect(element.checkVisibility).toHaveBeenCalledWith({
+      contentVisibilityAuto: true,
+      opacityProperty: true,
+      visibilityProperty: true
+    });
+    expect(element.style.opacity).toBe('0');
+    expect(observeMock).toHaveBeenCalledTimes(1);
+    expect(animeMock).not.toHaveBeenCalled();
+  });
+
+  test('uses computed style fallback when checkVisibility is unavailable', () => {
+    const element = document.createElement('div');
+    element.style.visibility = 'hidden';
+    element.getBoundingClientRect = () => ({
+      top: 100,
+      left: 100,
+      right: 300,
+      bottom: 300,
+      width: 200,
+      height: 200
+    });
+
+    directive(element, { modifiers: ['fade', 'once', 'threshold', '20'] });
+
+    expect(element.style.opacity).toBe('0');
+    expect(observeMock).toHaveBeenCalledTimes(1);
+    expect(animeMock).not.toHaveBeenCalled();
+  });
+
+  test('fades an initially visible repeating element and tracks later viewport changes', () => {
     const element = document.createElement('div');
     element.getBoundingClientRect = () => ({
       top: 100,
@@ -123,7 +171,7 @@ describe('directive', () => {
 
     directive(element, { modifiers: ['fade', 'repeat', 'threshold', '20'] });
 
-    expect(element.style.opacity).toBe('1');
+    expect(element.style.opacity).toBe('0');
     expect(observeMock).toHaveBeenCalledWith(
       element,
       expect.any(Function),
@@ -132,7 +180,12 @@ describe('directive', () => {
         threshold: 0.2
       })
     );
-    expect(animeMock).not.toHaveBeenCalled();
+    expect(animeMock).toHaveBeenCalledWith(element, {
+      opacity: [0, 1],
+      duration: 800,
+      delay: 0,
+      ease: 'out(2)'
+    });
   });
 
   test('does not treat enter offset pre-trigger zones as initially visible', () => {
@@ -153,11 +206,118 @@ describe('directive', () => {
       element,
       expect.any(Function),
       expect.objectContaining({
-        initialIntersected: false,
         enterMargin: '25%'
       })
     );
     expect(animeMock).not.toHaveBeenCalled();
+  });
+
+  test('finalizes on load when an initially below-viewport element becomes visible', () => {
+    const element = document.createElement('div');
+    const rects = [
+      {
+        top: 900,
+        left: 100,
+        right: 900,
+        bottom: 1100,
+        width: 800,
+        height: 200
+      },
+      {
+        top: 420,
+        left: 100,
+        right: 900,
+        bottom: 720,
+        width: 800,
+        height: 300
+      }
+    ];
+    element.getBoundingClientRect = vi.fn(() => rects.shift() ?? rects[0]);
+    const teardown = vi.fn();
+    observeMock.mockReturnValue(teardown);
+    const originalAddEventListener = globalThis.addEventListener;
+    const originalRemoveEventListener = globalThis.removeEventListener;
+    const listeners = {};
+    globalThis.addEventListener = vi.fn((eventName, callback) => {
+      listeners[eventName] = callback;
+    });
+    globalThis.removeEventListener = vi.fn();
+
+    try {
+      directive(element, { modifiers: ['fade', 'once', 'threshold', '20'] });
+
+      expect(element.style.opacity).toBe('0');
+      expect(observeMock).toHaveBeenCalledTimes(1);
+
+      listeners.load();
+
+      expect(element.style.opacity).toBe('0');
+      expect(teardown).toHaveBeenCalledTimes(1);
+      expect(animeMock).toHaveBeenCalledWith(element, {
+        opacity: [0, 1],
+        duration: 800,
+        delay: 0,
+        ease: 'out(2)'
+      });
+      expect(globalThis.removeEventListener).toHaveBeenCalledWith('load', listeners.load);
+      expect(globalThis.removeEventListener).toHaveBeenCalledWith('resize', listeners.resize);
+    } finally {
+      globalThis.addEventListener = originalAddEventListener;
+      globalThis.removeEventListener = originalRemoveEventListener;
+    }
+  });
+
+  test('finalizes on resize when an initially below-viewport element becomes visible', () => {
+    const element = document.createElement('div');
+    const rects = [
+      {
+        top: 900,
+        left: 100,
+        right: 900,
+        bottom: 1100,
+        width: 800,
+        height: 200
+      },
+      {
+        top: 420,
+        left: 100,
+        right: 900,
+        bottom: 720,
+        width: 800,
+        height: 300
+      }
+    ];
+    element.getBoundingClientRect = vi.fn(() => rects.shift() ?? rects[0]);
+    const teardown = vi.fn();
+    observeMock.mockReturnValue(teardown);
+    const originalAddEventListener = globalThis.addEventListener;
+    const originalRemoveEventListener = globalThis.removeEventListener;
+    const listeners = {};
+    globalThis.addEventListener = vi.fn((eventName, callback) => {
+      listeners[eventName] = callback;
+    });
+    globalThis.removeEventListener = vi.fn();
+
+    try {
+      directive(element, { modifiers: ['fade', 'once', 'threshold', '20'] });
+
+      expect(element.style.opacity).toBe('0');
+      expect(observeMock).toHaveBeenCalledTimes(1);
+
+      listeners.resize();
+
+      expect(element.style.opacity).toBe('0');
+      expect(teardown).toHaveBeenCalledTimes(1);
+      expect(animeMock).toHaveBeenCalledWith(element, {
+        opacity: [0, 1],
+        duration: 800,
+        delay: 0,
+        ease: 'out(2)'
+      });
+    } finally {
+      globalThis.addEventListener = originalAddEventListener;
+      globalThis.removeEventListener = originalRemoveEventListener;
+    }
   });
 
   test('keeps fade-in-out initially visible but still allows leave animation', () => {
@@ -176,9 +336,14 @@ describe('directive', () => {
 
     directive(element, { modifiers: ['fade-in-out', 'threshold', '20'] });
 
-    expect(element.style.opacity).toBe('1');
-    expect(animeMock).toHaveBeenCalledTimes(1);
-    expect(animeMock).toHaveBeenCalledWith(element, {
+    expect(element.style.opacity).toBe('0');
+    expect(animeMock).toHaveBeenNthCalledWith(1, element, {
+      opacity: [0, 1],
+      duration: 800,
+      delay: 0,
+      ease: 'out(2)'
+    });
+    expect(animeMock).toHaveBeenNthCalledWith(2, element, {
       opacity: [1, 0],
       duration: 800,
       delay: 0,

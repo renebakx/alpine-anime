@@ -43,9 +43,35 @@ function applyStyles(element, preset, frame) {
   applyAdditionalStyles(element, preset, frame);
 }
 
+function applyStartupFadeStyles(element, preset) {
+  applyStyles(element, preset, 'last');
+
+  if (preset.opacity) {
+    element.style.opacity = String(getFrameValue(preset.opacity, 'first'));
+  }
+}
+
 function prefersReducedMotion() {
   if (typeof globalThis.matchMedia !== 'function') return false;
   return globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function isRendered(element, { ignoreOpacity = false } = {}) {
+  if (typeof element.checkVisibility === 'function') {
+    return element.checkVisibility({
+      contentVisibilityAuto: true,
+      opacityProperty: !ignoreOpacity,
+      visibilityProperty: true
+    });
+  }
+
+  if (typeof globalThis.getComputedStyle !== 'function') return true;
+
+  const style = globalThis.getComputedStyle(element);
+  if (style.display === 'none' || style.visibility === 'hidden') return false;
+  if (!ignoreOpacity && style.opacity === '0') return false;
+
+  return true;
 }
 
 function getViewportSize() {
@@ -57,38 +83,31 @@ function getViewportSize() {
   };
 }
 
-function isInitiallyIntersecting(element, config) {
+function isVisibleInViewport(element, options) {
+  if (!isRendered(element, options)) return false;
   if (typeof element.getBoundingClientRect !== 'function') return false;
-
-  const rect = element.getBoundingClientRect();
-  const rectWidth = rect.width ?? rect.right - rect.left;
-  const rectHeight = rect.height ?? rect.bottom - rect.top;
 
   const viewport = getViewportSize();
   if (viewport.width <= 0 || viewport.height <= 0) return false;
 
-  const rootTop = 0;
-  const rootBottom = viewport.height;
-  const rootLeft = 0;
-  const rootRight = viewport.width;
+  const rect = element.getBoundingClientRect();
+  const visibleWidth = Math.min(rect.right, viewport.width) - Math.max(rect.left, 0);
+  const visibleHeight = Math.min(rect.bottom, viewport.height) - Math.max(rect.top, 0);
 
-  const visibleWidth = Math.min(rect.right, rootRight) - Math.max(rect.left, rootLeft);
-  const visibleHeight = Math.min(rect.bottom, rootBottom) - Math.max(rect.top, rootTop);
+  return visibleWidth >= 1 && visibleHeight >= 1;
+}
 
-  if (rectWidth <= 0 || rectHeight <= 0) {
-    const hasMeasurableEdge = rectWidth > 0 || rectHeight > 0;
-    const crossesViewportX = rect.right > rootLeft && rect.left < rootRight;
-    const crossesViewportY = rect.bottom >= rootTop && rect.top <= rootBottom;
+function createStartupVisibilityWatcher(callback) {
+  if (typeof globalThis.addEventListener !== 'function') return () => {};
 
-    return hasMeasurableEdge && crossesViewportX && crossesViewportY;
-  }
+  globalThis.addEventListener('load', callback);
+  globalThis.addEventListener('resize', callback);
 
-  if (visibleWidth <= 0 || visibleHeight <= 0) return false;
-
-  const visibleRatio = (visibleWidth * visibleHeight) / (rectWidth * rectHeight);
-  const threshold = config.threshold ?? 0;
-
-  return threshold === 0 ? visibleRatio > 0 : visibleRatio >= threshold;
+  return () => {
+    if (typeof globalThis.removeEventListener !== 'function') return;
+    globalThis.removeEventListener('load', callback);
+    globalThis.removeEventListener('resize', callback);
+  };
 }
 
 export default function directive(element, { modifiers = [] }, { cleanup } = {}) {
@@ -116,16 +135,14 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
     return;
   }
 
-  const initialIntersected = isInitiallyIntersecting(element, config);
-  applyStyles(element, preset, initialIntersected ? 'last' : 'first');
-
-  if (initialIntersected && !config.replay && presetName !== 'fade-in-out') {
-    return;
-  }
-
   let activeAnimation;
+  let teardown = () => {};
+  let stopStartupVisibilityWatcher = () => {};
 
   const animateWithConfig = (parameters) => {
+    stopStartupVisibilityWatcher();
+    stopStartupVisibilityWatcher = () => {};
+
     if (activeAnimation && typeof activeAnimation.cancel === 'function') {
       activeAnimation.cancel();
     }
@@ -143,20 +160,46 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
     });
   };
 
-  const teardown = presetName === 'fade-in-out'
-    ? observe(element, {
-      enter: () => animateWithConfig({ opacity: [0, 1] }),
-      leave: () => animateWithConfig({ opacity: [1, 0], delay: 0 })
-    }, {
-      ...config,
-      initialIntersected
-    })
-    : observe(element, () => {
-      animateWithConfig(preset);
-    }, {
-      ...config,
-      initialIntersected
+  const setupObserver = (initialIntersected = false) => {
+    teardown = presetName === 'fade-in-out'
+      ? observe(element, {
+        enter: () => animateWithConfig({ opacity: [0, 1] }),
+        leave: () => animateWithConfig({ opacity: [1, 0], delay: 0 })
+      }, {
+        ...config,
+        initialIntersected
+      })
+      : observe(element, () => {
+        animateWithConfig(preset);
+      }, {
+        ...config,
+        initialIntersected
+      });
+  };
+
+  const finalizeStartup = () => {
+    stopStartupVisibilityWatcher();
+    stopStartupVisibilityWatcher = () => {};
+    applyStartupFadeStyles(element, preset);
+    animateWithConfig({ opacity: preset.opacity ?? [0, 1] });
+
+    if (!config.replay && presetName !== 'fade-in-out') return;
+    setupObserver(true);
+  };
+
+  if (isVisibleInViewport(element)) {
+    finalizeStartup();
+  } else {
+    applyStyles(element, preset, 'first');
+    stopStartupVisibilityWatcher = createStartupVisibilityWatcher(() => {
+      if (!isVisibleInViewport(element, { ignoreOpacity: true })) return;
+
+      teardown();
+      teardown = () => {};
+      finalizeStartup();
     });
+    setupObserver(false);
+  }
 
   if (typeof cleanup === 'function') {
     cleanup(() => {
@@ -166,7 +209,7 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
       if (activeAnimation && typeof activeAnimation.cancel === 'function') {
         activeAnimation.cancel();
       }
-
+      stopStartupVisibilityWatcher();
       teardown();
     });
   }

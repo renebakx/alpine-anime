@@ -81,51 +81,75 @@ describe('CDN browser build', () => {
             });
         });
 
+        const observers = [];
         const observerOptions = [];
         globalThis.IntersectionObserver = class {
-            constructor(_, options) {
+            constructor(callback, options) {
+                this.callback = callback;
+                observers.push(this);
                 observerOptions.push(options);
             }
 
             observe() {}
+            unobserve() {}
             disconnect() {}
         };
+        const animateSpy = vi.fn(() => ({
+            cancel: vi.fn(),
+            commitStyles: vi.fn(),
+            finished: Promise.resolve(),
+            pause: vi.fn(),
+            play: vi.fn()
+        }));
+        const originalAnimate = Element.prototype.animate;
+        Element.prototype.animate = animateSpy;
 
-        const cdnScript = readFileSync(resolve('dist/cdn.js'), 'utf8');
-        window.eval(cdnScript);
-        document.dispatchEvent(new CustomEvent('alpine:init'));
+        try {
+            const cdnScript = readFileSync(resolve('dist/cdn.js'), 'utf8');
+            window.eval(cdnScript);
+            document.dispatchEvent(new CustomEvent('alpine:init'));
 
-        expect(window.AlpineAnime).toBeDefined();
-        expect(pluginSpy).toHaveBeenCalledWith(window.AlpineAnime);
-        expect(directiveSpy).toHaveBeenCalledWith('anime', expect.any(Function));
+            expect(window.AlpineAnime).toBeDefined();
+            expect(pluginSpy).toHaveBeenCalledWith(window.AlpineAnime);
+            expect(directiveSpy).toHaveBeenCalledWith('anime', expect.any(Function));
 
-        const directive = directiveSpy.mock.calls[0][1];
-        const element = document.createElement('article');
-        directive(element, { modifiers: ['blur-up', 'once', 'duration', '900', 'threshold', '35', 'enter', '25', 'leave', '-10'] });
+            const directive = directiveSpy.mock.calls[0][1];
+            const element = document.createElement('article');
+            directive(element, { modifiers: ['blur-up', 'once', 'duration', '900', 'threshold', '35', 'enter', '25', 'leave', '-10'] });
+            observers[0].callback([{ target: element, isIntersecting: false, intersectionRatio: 0 }]);
 
-        expect(element.style.opacity).toBe('0');
-        expect(element.style.transform).toBe('translateY(24px)');
-        expect(element.style.filter).toBe('blur(12px)');
-        expect(observerOptions[0]).toEqual({
-            threshold: 0.35,
-            rootMargin: '-10% 0px 25% 0px'
-        });
+            expect(element.style.opacity).toBe('0');
+            expect(element.style.transform).toBe('translateY(24px)');
+            expect(element.style.filter).toBe('blur(12px)');
+            expect(observerOptions[0]).toEqual({
+                threshold: 0.35,
+                rootMargin: '-10% 0px 25% 0px'
+            });
 
-        const initiallyVisibleElement = document.createElement('article');
-        initiallyVisibleElement.getBoundingClientRect = () => ({
-            top: 100,
-            left: 100,
-            right: 300,
-            bottom: 300,
-            width: 200,
-            height: 200
-        });
+            const initiallyVisibleElement = document.createElement('article');
+            initiallyVisibleElement.getBoundingClientRect = () => ({
+                top: 100,
+                left: 100,
+                right: 300,
+                bottom: 300,
+                width: 200,
+                height: 200
+            });
 
-        directive(initiallyVisibleElement, { modifiers: ['blur-up', 'once', 'threshold', '20'] });
+            directive(initiallyVisibleElement, { modifiers: ['blur-up', 'once', 'threshold', '20'] });
 
-        expect(initiallyVisibleElement.style.opacity).toBe('1');
-        expect(initiallyVisibleElement.style.transform).toBe('translateY(0px)');
-        expect(initiallyVisibleElement.style.filter).toBe('blur(0px)');
-        expect(observerOptions).toHaveLength(1);
+            expect(initiallyVisibleElement.style.opacity).toBe('0');
+            expect(initiallyVisibleElement.style.transform).toBe('translateY(0px)');
+            expect(initiallyVisibleElement.style.filter).toBe('blur(0px)');
+            expect(animateSpy).toHaveBeenCalledTimes(1);
+            expect(animateSpy.mock.calls[0][0]).toEqual({ opacity: ['0', '1'] });
+            expect(observerOptions).toHaveLength(1);
+        } finally {
+            if (originalAnimate) {
+                Element.prototype.animate = originalAnimate;
+            } else {
+                delete Element.prototype.animate;
+            }
+        }
     });
 });

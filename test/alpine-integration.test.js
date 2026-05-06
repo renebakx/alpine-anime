@@ -12,9 +12,11 @@ describe('Alpine integration', () => {
       </main>
     `;
 
+    let observerInstance;
     globalThis.IntersectionObserver = class {
       constructor(callback) {
         this.callback = callback;
+        observerInstance = this;
       }
 
       observe() {}
@@ -26,6 +28,8 @@ describe('Alpine integration', () => {
     await Promise.resolve();
 
     const card = document.getElementById('card');
+    observerInstance.callback([{ target: card, isIntersecting: false, intersectionRatio: 0 }]);
+
     expect(card.style.opacity).toBe('0');
     expect(card.style.transform).toBe('translateY(50px)');
   });
