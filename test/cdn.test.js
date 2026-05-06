@@ -1,11 +1,15 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 
 describe('CDN browser build', () => {
     beforeEach(() => {
         // Reset global state
         document.body.innerHTML = '';
+        document.head.innerHTML = '';
         delete window.Alpine;
         delete window.AlpineAnime;
+        delete globalThis.IntersectionObserver;
         vi.resetModules();
     });
 
@@ -55,5 +59,47 @@ describe('CDN browser build', () => {
         // Verify it was registered in the presets (we can import getPreset to check)
         const { getPreset } = await import('../src/presets.js');
         expect(getPreset('cdn-test')).toEqual({ opacity: [0, 1] });
+    });
+
+    test('built CDN file supports README custom presets registered during alpine:init', () => {
+        const directiveSpy = vi.fn();
+        const pluginSpy = vi.fn((plugin) => {
+            if (plugin === window.AlpineAnime) {
+                plugin({ directive: directiveSpy });
+            }
+        });
+        window.Alpine = {
+            plugin: pluginSpy
+        };
+
+        document.addEventListener('alpine:init', () => {
+            window.AlpineAnime.definePreset('blur-up', {
+                opacity: [0, 1],
+                y: [24, 0],
+                filter: ['blur(12px)', 'blur(0px)'],
+                ease: 'cubicBezier(0.7, 0.1, 0.5, 0.9)'
+            });
+        });
+
+        globalThis.IntersectionObserver = class {
+            observe() {}
+            disconnect() {}
+        };
+
+        const cdnScript = readFileSync(resolve('dist/cdn.js'), 'utf8');
+        window.eval(cdnScript);
+        document.dispatchEvent(new CustomEvent('alpine:init'));
+
+        expect(window.AlpineAnime).toBeDefined();
+        expect(pluginSpy).toHaveBeenCalledWith(window.AlpineAnime);
+        expect(directiveSpy).toHaveBeenCalledWith('anime', expect.any(Function));
+
+        const directive = directiveSpy.mock.calls[0][1];
+        const element = document.createElement('article');
+        directive(element, { modifiers: ['blur-up', 'once', 'duration', '900'] });
+
+        expect(element.style.opacity).toBe('0');
+        expect(element.style.transform).toBe('translateY(24px)');
+        expect(element.style.filter).toBe('blur(12px)');
     });
 });
