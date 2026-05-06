@@ -34,7 +34,7 @@ export function observe(element, handlers, config) {
     return () => {};
   }
 
-  let hasIntersected = false;
+  let hasIntersected = Boolean(config?.initialIntersected);
 
   const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {

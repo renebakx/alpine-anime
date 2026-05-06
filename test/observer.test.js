@@ -71,6 +71,23 @@ describe('observe', () => {
     expect(onLeave).toHaveBeenCalledTimes(1);
   });
 
+  test('treats initially visible elements as already intersected', () => {
+    const element = document.createElement('div');
+    const onEnter = vi.fn();
+    const onLeave = vi.fn();
+
+    observe(element, { enter: onEnter, leave: onLeave }, {
+      threshold: 0.2,
+      replay: true,
+      initialIntersected: true
+    });
+    instance.callback([{ isIntersecting: true, target: element }]);
+    instance.callback([{ isIntersecting: false, target: element }]);
+
+    expect(onEnter).not.toHaveBeenCalled();
+    expect(onLeave).toHaveBeenCalledTimes(1);
+  });
+
   test('applies configurable enter and leave root margins', () => {
     const element = document.createElement('div');
     const callback = vi.fn();

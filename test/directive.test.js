@@ -22,6 +22,8 @@ describe('directive', () => {
     animeMock.mockReset();
     resetPresets();
     delete globalThis.matchMedia;
+    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true });
+    Object.defineProperty(window, 'innerHeight', { value: 768, configurable: true });
   });
 
   test('does nothing when no preset modifier is present', () => {
@@ -68,6 +70,118 @@ describe('directive', () => {
       opacity: [0, 1],
       duration: 1200,
       delay: 200,
+      ease: 'out(2)'
+    });
+  });
+
+  test('shows an initially visible once element without observing for a later enter animation', () => {
+    const element = document.createElement('div');
+    element.getBoundingClientRect = () => ({
+      top: 100,
+      left: 100,
+      right: 300,
+      bottom: 300,
+      width: 200,
+      height: 200
+    });
+
+    directive(element, { modifiers: ['fade', 'once', 'threshold', '20'] });
+
+    expect(element.style.opacity).toBe('1');
+    expect(observeMock).not.toHaveBeenCalled();
+    expect(animeMock).not.toHaveBeenCalled();
+  });
+
+  test('shows an initially visible zero-height media wrapper without waiting for scroll', () => {
+    const element = document.createElement('div');
+    element.getBoundingClientRect = () => ({
+      top: 420,
+      left: 100,
+      right: 900,
+      bottom: 420,
+      width: 800,
+      height: 0
+    });
+
+    directive(element, { modifiers: ['fade', 'once', 'threshold', '20'] });
+
+    expect(element.style.opacity).toBe('1');
+    expect(observeMock).not.toHaveBeenCalled();
+    expect(animeMock).not.toHaveBeenCalled();
+  });
+
+  test('shows an initially visible repeating element and tracks later viewport changes', () => {
+    const element = document.createElement('div');
+    element.getBoundingClientRect = () => ({
+      top: 100,
+      left: 100,
+      right: 300,
+      bottom: 300,
+      width: 200,
+      height: 200
+    });
+
+    directive(element, { modifiers: ['fade', 'repeat', 'threshold', '20'] });
+
+    expect(element.style.opacity).toBe('1');
+    expect(observeMock).toHaveBeenCalledWith(
+      element,
+      expect.any(Function),
+      expect.objectContaining({
+        initialIntersected: true,
+        threshold: 0.2
+      })
+    );
+    expect(animeMock).not.toHaveBeenCalled();
+  });
+
+  test('does not treat enter offset pre-trigger zones as initially visible', () => {
+    const element = document.createElement('div');
+    element.getBoundingClientRect = () => ({
+      top: 800,
+      left: 100,
+      right: 300,
+      bottom: 1000,
+      width: 200,
+      height: 200
+    });
+
+    directive(element, { modifiers: ['fade', 'repeat', 'threshold', '0', 'enter', '25'] });
+
+    expect(element.style.opacity).toBe('0');
+    expect(observeMock).toHaveBeenCalledWith(
+      element,
+      expect.any(Function),
+      expect.objectContaining({
+        initialIntersected: false,
+        enterMargin: '25%'
+      })
+    );
+    expect(animeMock).not.toHaveBeenCalled();
+  });
+
+  test('keeps fade-in-out initially visible but still allows leave animation', () => {
+    const element = document.createElement('div');
+    element.getBoundingClientRect = () => ({
+      top: 100,
+      left: 100,
+      right: 300,
+      bottom: 300,
+      width: 200,
+      height: 200
+    });
+    observeMock.mockImplementation((_, handlers) => {
+      handlers.leave();
+    });
+
+    directive(element, { modifiers: ['fade-in-out', 'threshold', '20'] });
+
+    expect(element.style.opacity).toBe('1');
+    expect(animeMock).toHaveBeenCalledTimes(1);
+    expect(animeMock).toHaveBeenCalledWith(element, {
+      opacity: [1, 0],
+      duration: 800,
+      delay: 0,
       ease: 'out(2)'
     });
   });

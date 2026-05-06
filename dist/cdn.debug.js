@@ -814,7 +814,7 @@ var AlpineAnime = (function() {
       return () => {
       };
     }
-    let hasIntersected = false;
+    let hasIntersected = Boolean(config == null ? void 0 : config.initialIntersected);
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (entry.target !== element) continue;
@@ -1026,6 +1026,39 @@ var AlpineAnime = (function() {
     if (typeof globalThis.matchMedia !== "function") return false;
     return globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
+  function getViewportSize() {
+    var _a;
+    const doc2 = (_a = globalThis.document) == null ? void 0 : _a.documentElement;
+    return {
+      width: globalThis.innerWidth || (doc2 == null ? void 0 : doc2.clientWidth) || 0,
+      height: globalThis.innerHeight || (doc2 == null ? void 0 : doc2.clientHeight) || 0
+    };
+  }
+  function isInitiallyIntersecting(element, config) {
+    var _a, _b, _c;
+    if (typeof element.getBoundingClientRect !== "function") return false;
+    const rect = element.getBoundingClientRect();
+    const rectWidth = (_a = rect.width) != null ? _a : rect.right - rect.left;
+    const rectHeight = (_b = rect.height) != null ? _b : rect.bottom - rect.top;
+    const viewport = getViewportSize();
+    if (viewport.width <= 0 || viewport.height <= 0) return false;
+    const rootTop = 0;
+    const rootBottom = viewport.height;
+    const rootLeft = 0;
+    const rootRight = viewport.width;
+    const visibleWidth = Math.min(rect.right, rootRight) - Math.max(rect.left, rootLeft);
+    const visibleHeight = Math.min(rect.bottom, rootBottom) - Math.max(rect.top, rootTop);
+    if (rectWidth <= 0 || rectHeight <= 0) {
+      const hasMeasurableEdge = rectWidth > 0 || rectHeight > 0;
+      const crossesViewportX = rect.right > rootLeft && rect.left < rootRight;
+      const crossesViewportY = rect.bottom >= rootTop && rect.top <= rootBottom;
+      return hasMeasurableEdge && crossesViewportX && crossesViewportY;
+    }
+    if (visibleWidth <= 0 || visibleHeight <= 0) return false;
+    const visibleRatio = visibleWidth * visibleHeight / (rectWidth * rectHeight);
+    const threshold = (_c = config.threshold) != null ? _c : 0;
+    return threshold === 0 ? visibleRatio > 0 : visibleRatio >= threshold;
+  }
   function directive(element, { modifiers = [] }, { cleanup } = {}) {
     const presetNames = modifiers.filter((modifier) => Boolean(getPreset(modifier)));
     if (presetNames.length !== 1) {
@@ -1034,7 +1067,8 @@ var AlpineAnime = (function() {
       }
       return;
     }
-    const preset = getPreset(presetNames[0]);
+    const presetName = presetNames[0];
+    const preset = getPreset(presetName);
     const config = parseModifiers(modifiers);
     {
       console.log("[Alpine Anime] Initializing directive", element);
@@ -1045,7 +1079,11 @@ var AlpineAnime = (function() {
       applyStyles(element, preset, "last");
       return;
     }
-    applyStyles(element, preset, "first");
+    const initialIntersected = isInitiallyIntersecting(element, config);
+    applyStyles(element, preset, initialIntersected ? "last" : "first");
+    if (initialIntersected && !config.replay && presetName !== "fade-in-out") {
+      return;
+    }
     let activeAnimation;
     const animateWithConfig = (parameters) => {
       var _a, _b, _c;
@@ -1063,12 +1101,18 @@ var AlpineAnime = (function() {
         ease: (_c = parameters.ease) != null ? _c : config.ease
       });
     };
-    const teardown = presetNames[0] === "fade-in-out" ? observe(element, {
+    const teardown = presetName === "fade-in-out" ? observe(element, {
       enter: () => animateWithConfig({ opacity: [0, 1] }),
       leave: () => animateWithConfig({ opacity: [1, 0], delay: 0 })
-    }, config) : observe(element, () => {
+    }, {
+      ...config,
+      initialIntersected
+    }) : observe(element, () => {
       animateWithConfig(preset);
-    }, config);
+    }, {
+      ...config,
+      initialIntersected
+    });
     if (typeof cleanup === "function") {
       cleanup(() => {
         {

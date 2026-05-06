@@ -48,6 +48,49 @@ function prefersReducedMotion() {
   return globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+function getViewportSize() {
+  const doc = globalThis.document?.documentElement;
+
+  return {
+    width: globalThis.innerWidth || doc?.clientWidth || 0,
+    height: globalThis.innerHeight || doc?.clientHeight || 0
+  };
+}
+
+function isInitiallyIntersecting(element, config) {
+  if (typeof element.getBoundingClientRect !== 'function') return false;
+
+  const rect = element.getBoundingClientRect();
+  const rectWidth = rect.width ?? rect.right - rect.left;
+  const rectHeight = rect.height ?? rect.bottom - rect.top;
+
+  const viewport = getViewportSize();
+  if (viewport.width <= 0 || viewport.height <= 0) return false;
+
+  const rootTop = 0;
+  const rootBottom = viewport.height;
+  const rootLeft = 0;
+  const rootRight = viewport.width;
+
+  const visibleWidth = Math.min(rect.right, rootRight) - Math.max(rect.left, rootLeft);
+  const visibleHeight = Math.min(rect.bottom, rootBottom) - Math.max(rect.top, rootTop);
+
+  if (rectWidth <= 0 || rectHeight <= 0) {
+    const hasMeasurableEdge = rectWidth > 0 || rectHeight > 0;
+    const crossesViewportX = rect.right > rootLeft && rect.left < rootRight;
+    const crossesViewportY = rect.bottom >= rootTop && rect.top <= rootBottom;
+
+    return hasMeasurableEdge && crossesViewportX && crossesViewportY;
+  }
+
+  if (visibleWidth <= 0 || visibleHeight <= 0) return false;
+
+  const visibleRatio = (visibleWidth * visibleHeight) / (rectWidth * rectHeight);
+  const threshold = config.threshold ?? 0;
+
+  return threshold === 0 ? visibleRatio > 0 : visibleRatio >= threshold;
+}
+
 export default function directive(element, { modifiers = [] }, { cleanup } = {}) {
   const presetNames = modifiers.filter((modifier) => Boolean(getPreset(modifier)));
 
@@ -58,7 +101,8 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
     return;
   }
 
-  const preset = getPreset(presetNames[0]);
+  const presetName = presetNames[0];
+  const preset = getPreset(presetName);
   const config = parseModifiers(modifiers);
 
   if (typeof __DEBUG__ !== 'undefined' && __DEBUG__) {
@@ -72,7 +116,12 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
     return;
   }
 
-  applyStyles(element, preset, 'first');
+  const initialIntersected = isInitiallyIntersecting(element, config);
+  applyStyles(element, preset, initialIntersected ? 'last' : 'first');
+
+  if (initialIntersected && !config.replay && presetName !== 'fade-in-out') {
+    return;
+  }
 
   let activeAnimation;
 
@@ -94,14 +143,20 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
     });
   };
 
-  const teardown = presetNames[0] === 'fade-in-out'
+  const teardown = presetName === 'fade-in-out'
     ? observe(element, {
       enter: () => animateWithConfig({ opacity: [0, 1] }),
       leave: () => animateWithConfig({ opacity: [1, 0], delay: 0 })
-    }, config)
+    }, {
+      ...config,
+      initialIntersected
+    })
     : observe(element, () => {
       animateWithConfig(preset);
-    }, config);
+    }, {
+      ...config,
+      initialIntersected
+    });
 
   if (typeof cleanup === 'function') {
     cleanup(() => {

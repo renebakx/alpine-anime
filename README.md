@@ -520,6 +520,8 @@ References:
 - Unknown modifiers are ignored.
 - Invalid numeric values fall back to defaults.
 - `threshold` modifiers are clamped to `0..100` and converted to the native `IntersectionObserver` `0..1` range.
+- Elements already visible in the viewport when Alpine initializes are shown in their final state without running the enter animation.
+- `fade-in-out` still observes initially visible elements so the leave animation can run when they exit the viewport.
 - The plugin uses native `IntersectionObserver`.
 - In environments without `IntersectionObserver`, enter animation falls back to immediate run.
 - If the user has `prefers-reduced-motion: reduce`, the plugin skips runtime animation and applies final visual state directly.
