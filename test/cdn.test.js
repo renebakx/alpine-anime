@@ -51,6 +51,7 @@ describe('CDN browser build', () => {
         window.AlpineAnime = cdnModule.default;
 
         expect(window.AlpineAnime).toBeDefined();
+        expect(window.AlpineAnime.version).toBe('1.0.0-beta-1');
         expect(typeof window.AlpineAnime.definePreset).toBe('function');
         
         // Test defining a preset via the global object

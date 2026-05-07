@@ -464,6 +464,8 @@
         <p>
           Want the usage guide and full API notes?
           <a href="https://github.com/renebakx/alpine-anime#readme">Read the README on GitHub</a>.
+          <br>
+           <small>Alpine Anime <em data-package-version>current build</em>.</small>
         </p>
       </footer>
     </main>
@@ -475,6 +477,11 @@
         // window.AlpineAnime is automatically registered as a plugin.
         // You can still use it to define custom presets.
         if (typeof window.AlpineAnime === 'function') {
+          const versionTarget = document.querySelector('[data-package-version]');
+          if (versionTarget) {
+            versionTarget.textContent = `v${window.AlpineAnime.version}`;
+          }
+
           window.AlpineAnime.definePreset('blur-up', {
             opacity: [0, 1],
             y: [24, 0],

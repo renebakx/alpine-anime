@@ -1,6 +1,6 @@
 {
   "name": "@renebakx/alpine-anime",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta-1",
   "description": "A small Alpine.js x-anime directive for viewport-driven Anime.js reveal animations.",
   "type": "module",
   "homepage": "https://renebakx.github.io/alpine-anime/",

@@ -12,6 +12,7 @@ describe('plugin entrypoint', () => {
   });
 
   test('exposes the custom preset registry API on the plugin function', () => {
+    expect(typeof plugin.version).toBe('string');
     expect(typeof plugin.definePreset).toBe('function');
     expect(typeof plugin.getPreset).toBe('function');
     expect(typeof plugin.getPresetNames).toBe('function');

@@ -1,9 +1,17 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
+
+const packageJson = JSON.parse(
+  readFileSync(new URL('./package.json', import.meta.url), 'utf8')
+);
 
 export default defineConfig(({ mode }) => {
   const isCdn = mode === 'cdn';
 
   return {
+    define: {
+      __PACKAGE_VERSION__: JSON.stringify(packageJson.version)
+    },
     test: {
       environment: 'jsdom'
     },
