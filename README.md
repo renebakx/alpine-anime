@@ -633,6 +633,13 @@ Build:
 npm run build
 ```
 
+Set a release version locally before tagging:
+
+```bash
+npm run release:beta -- 1.0.0-beta-2
+npm run release:stable -- 1.0.0
+```
+
 Outputs:
 
 - `dist/module.js` for ESM

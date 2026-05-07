@@ -23,6 +23,8 @@
   "scripts": {
     "build": "vite build && vite build --mode cdn",
     "build:pages": "npm run build && node scripts/prepare-pages-demo.mjs",
+    "release:beta": "node scripts/release-version.mjs beta",
+    "release:stable": "node scripts/release-version.mjs stable",
     "test": "vitest run"
   },
   "peerDependencies": {
