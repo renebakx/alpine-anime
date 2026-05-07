@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 
+const packageJson = JSON.parse(readFileSync(resolve('package.json'), 'utf8'));
+
 describe('CDN browser build', () => {
     beforeEach(() => {
         // Reset global state
@@ -51,7 +53,7 @@ describe('CDN browser build', () => {
         window.AlpineAnime = cdnModule.default;
 
         expect(window.AlpineAnime).toBeDefined();
-        expect(window.AlpineAnime.version).toBe('1.0.0-beta-1');
+        expect(window.AlpineAnime.version).toBe(packageJson.version);
         expect(typeof window.AlpineAnime.definePreset).toBe('function');
         
         // Test defining a preset via the global object
