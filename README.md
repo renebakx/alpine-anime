@@ -53,7 +53,7 @@ Alpine.start();
 
 The CDN build registers itself on Alpine's `alpine:init` event.
 
-Demo page: [renebakx.github.io/alpine-anime/demo.html](https://renebakx.github.io/alpine-anime/demo.html)
+Demo page: [renebakx.github.io/alpine-anime/](https://renebakx.github.io/alpine-anime/)
 
 ## No Extra CSS Required
 

@@ -9,15 +9,13 @@ await rm(siteDir, { recursive: true, force: true });
 await mkdir(siteDir, { recursive: true });
 
 const demoSource = join(root, 'demo', 'index.html');
-const demoTarget = join(siteDir, 'demo.html');
 const html = await readFile(demoSource, 'utf8');
+const pagesHtml = html
+  .replaceAll('../dist/cdn.js', './dist/cdn.js')
+  .replaceAll('../node_modules/alpinejs/dist/cdn.min.js', './vendor/alpinejs/cdn.min.js');
 
-await writeFile(
-  demoTarget,
-  html
-    .replaceAll('../dist/cdn.js', './dist/cdn.js')
-    .replaceAll('../node_modules/alpinejs/dist/cdn.min.js', './vendor/alpinejs/cdn.min.js')
-);
+await writeFile(join(siteDir, 'index.html'), pagesHtml);
+await writeFile(join(siteDir, 'demo.html'), pagesHtml);
 
 await cp(join(root, 'demo', 'assets'), join(siteDir, 'assets'), { recursive: true });
 
