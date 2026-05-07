@@ -193,6 +193,7 @@
         background-repeat: no-repeat;
         background-position: center;
         background-size: cover;
+        will-change: transform;
       }
 
       .parallax-image.coast {
@@ -235,11 +236,12 @@
 
       .full-bleed-parallax-image {
         position: absolute;
-        inset: -18% 0;
+        inset: 0;
         z-index: -2;
         background-image: url("./assets/parallax-courtyard.png");
         background-position: center;
         background-size: cover;
+        will-change: transform;
       }
 
       .full-bleed-parallax-content {

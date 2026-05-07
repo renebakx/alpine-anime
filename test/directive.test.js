@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-const { observeMock, animeMock, createScrollObserverMock } = vi.hoisted(() => ({
+const { observeMock, animeMock, trackScrollProgressMock } = vi.hoisted(() => ({
   observeMock: vi.fn(),
   animeMock: vi.fn(),
-  createScrollObserverMock: vi.fn()
+  trackScrollProgressMock: vi.fn()
 }));
 
 vi.mock('../src/observer.js', () => ({
@@ -11,8 +11,11 @@ vi.mock('../src/observer.js', () => ({
 }));
 
 vi.mock('../src/anime.js', () => ({
-  default: animeMock,
-  createScrollObserver: createScrollObserverMock
+  default: animeMock
+}));
+
+vi.mock('../src/scroll.js', () => ({
+  trackScrollProgress: trackScrollProgressMock
 }));
 
 import directive from '../src/directive.js';
@@ -22,7 +25,8 @@ describe('directive', () => {
   beforeEach(() => {
     observeMock.mockReset();
     animeMock.mockReset();
-    createScrollObserverMock.mockReset();
+    trackScrollProgressMock.mockReset();
+    trackScrollProgressMock.mockReturnValue(() => {});
     resetPresets();
     delete globalThis.matchMedia;
     Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true });
@@ -549,53 +553,61 @@ describe('directive', () => {
     expect(animeMock).not.toHaveBeenCalled();
   });
 
-  test('sets up parallax as a scroll-synced WAAPI animation', () => {
+  test('sets up parallax as a scroll-driven WAAPI animation', () => {
     const element = document.createElement('div');
-    const scrollObserver = { revert: vi.fn() };
-    createScrollObserverMock.mockReturnValue(scrollObserver);
 
     directive(element, { modifiers: ['parallax'] });
 
     expect(observeMock).not.toHaveBeenCalled();
-    expect(createScrollObserverMock).toHaveBeenCalledWith({
-      target: element,
+    expect(trackScrollProgressMock).toHaveBeenCalledWith(element, expect.objectContaining({
       axis: 'y',
-      sync: true,
-      enter: 'end start',
-      leave: 'start end'
-    });
+      onProgress: expect.any(Function)
+    }));
     expect(animeMock).toHaveBeenCalledWith(element, {
       translate: ['0px 60px', '0px -60px'],
       duration: 1000,
       ease: 'linear',
-      autoplay: scrollObserver
+      autoplay: false,
+      persist: true
     });
+  });
+
+  test('drives the WAAPI animation progress from scroll updates', () => {
+    const element = document.createElement('div');
+    const animation = {};
+    animeMock.mockReturnValue(animation);
+
+    directive(element, { modifiers: ['parallax'] });
+
+    const { onProgress } = trackScrollProgressMock.mock.calls[0][1];
+
+    onProgress(0.25);
+    expect(animation.progress).toBe(0.25);
+
+    onProgress(0.75);
+    expect(animation.progress).toBe(0.75);
   });
 
   test('supports horizontal reversed parallax with a custom amount', () => {
     const element = document.createElement('div');
-    const scrollObserver = { revert: vi.fn() };
-    createScrollObserverMock.mockReturnValue(scrollObserver);
 
     directive(element, { modifiers: ['parallax', 'amount', '240', 'axis', 'x', 'reverse'] });
 
-    expect(createScrollObserverMock).toHaveBeenCalledWith(expect.objectContaining({
-      target: element,
+    expect(trackScrollProgressMock).toHaveBeenCalledWith(element, expect.objectContaining({
       axis: 'x'
     }));
     expect(animeMock).toHaveBeenCalledWith(element, {
       translate: ['-120px 0px', '120px 0px'],
       duration: 1000,
       ease: 'linear',
-      autoplay: scrollObserver
+      autoplay: false,
+      persist: true
     });
   });
 
   test('keeps existing transform styles separate from parallax translate animation', () => {
     const element = document.createElement('div');
-    const scrollObserver = { revert: vi.fn() };
     element.style.transform = 'translateX(20px)';
-    createScrollObserverMock.mockReturnValue(scrollObserver);
 
     directive(element, { modifiers: ['parallax'] });
 
@@ -615,17 +627,17 @@ describe('directive', () => {
 
     expect(element.style.translate).toBe('0px 0px');
     expect(element.style.transform).toBe('');
-    expect(createScrollObserverMock).not.toHaveBeenCalled();
+    expect(trackScrollProgressMock).not.toHaveBeenCalled();
     expect(observeMock).not.toHaveBeenCalled();
     expect(animeMock).not.toHaveBeenCalled();
   });
 
-  test('cleans up parallax animation and scroll observer when Alpine destroys the element', () => {
+  test('cleans up parallax animation and scroll tracking when Alpine destroys the element', () => {
     const element = document.createElement('div');
     const cleanup = vi.fn();
     const cancel = vi.fn();
-    const scrollObserver = { revert: vi.fn() };
-    createScrollObserverMock.mockReturnValue(scrollObserver);
+    const stopScrollTracking = vi.fn();
+    trackScrollProgressMock.mockReturnValue(stopScrollTracking);
     animeMock.mockReturnValue({ cancel });
 
     directive(element, { modifiers: ['parallax'] }, { cleanup });
@@ -634,6 +646,6 @@ describe('directive', () => {
     registeredCleanup();
 
     expect(cancel).toHaveBeenCalledTimes(1);
-    expect(scrollObserver.revert).toHaveBeenCalledTimes(1);
+    expect(stopScrollTracking).toHaveBeenCalledTimes(1);
   });
 });

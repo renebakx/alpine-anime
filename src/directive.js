@@ -1,5 +1,6 @@
-import anime, { createScrollObserver } from './anime.js';
+import anime from './anime.js';
 import { observe } from './observer.js';
+import { trackScrollProgress } from './scroll.js';
 import { parseModifiers } from './parser.js';
 import { getPreset } from './presets.js';
 
@@ -144,27 +145,27 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
     }
 
     const values = getParallaxValues(config);
-    const scrollObserver = createScrollObserver({
-      target: element,
-      axis: config.parallax.axis,
-      sync: true,
-      enter: 'end start',
-      leave: 'start end'
-    });
     const activeAnimation = anime(element, {
       translate: values.map((value) => formatParallaxTranslate(value, config.parallax.axis)),
       duration: 1000,
       ease: 'linear',
-      autoplay: scrollObserver
+      autoplay: false,
+      persist: true
+    });
+
+    const stopScrollTracking = trackScrollProgress(element, {
+      axis: config.parallax.axis,
+      onProgress: (progress) => {
+        if (!activeAnimation) return;
+        activeAnimation.progress = progress;
+      }
     });
 
     if (typeof cleanup === 'function') {
       cleanup(() => {
+        stopScrollTracking();
         if (activeAnimation && typeof activeAnimation.cancel === 'function') {
           activeAnimation.cancel();
-        }
-        if (scrollObserver && typeof scrollObserver.revert === 'function') {
-          scrollObserver.revert();
         }
       });
     }
