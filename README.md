@@ -207,6 +207,25 @@ Fades in on viewport enter and fades out on viewport leave.
 </div>
 ```
 
+### `parallax`
+
+Scroll-synced vertical movement, from `translate: 0px 60px` to `translate: 0px -60px` by default. Unlike the reveal presets, this does not wait for an enter event and then play. It links the WAAPI animation to Anime.js `onScroll()` so the element follows scroll progress while it crosses the viewport.
+
+Parallax uses the native CSS `translate` property instead of Anime.js `x` / `y` transform shortcuts. That keeps it separate from existing `transform` styles used by reveal effects.
+
+```html
+<figure x-anime.parallax>
+  <img src="/feature.jpg" alt="Feature">
+</figure>
+```
+
+Tune the total movement range with `amount`, flip the direction with `reverse`, or move horizontally with `axis.x`:
+
+```html
+<figure x-anime.parallax.amount.180.reverse></figure>
+<figure x-anime.parallax.amount.240.axis.x></figure>
+```
+
 ## Runtime Modifiers
 
 Modifiers are written as Alpine modifier tokens.
@@ -224,6 +243,9 @@ Modifiers are written as Alpine modifier tokens.
 | `repeat` | `repeat` | Animate again after leaving and re-entering |
 | `enter.<value>` / `start.<value>` | `enter.25` | Move the viewport bottom edge for enter detection |
 | `leave.<value>` / `end.<value>` | `leave.-10` | Move the viewport top edge for leave detection |
+| `amount.<px>` | `amount.180` | Total parallax movement in pixels, clamped to `0..1000` |
+| `axis.x` / `axis.y` | `axis.x` | Parallax movement axis, default `y` |
+| `reverse` | `reverse` | Flips parallax movement direction |
 
 ### Visibility vs Viewport Offsets
 
@@ -417,6 +439,14 @@ Fade in and out:
 </div>
 ```
 
+Scroll-synced parallax:
+
+```html
+<figure x-anime.parallax.amount.180>
+  Moves continuously with scroll progress.
+</figure>
+```
+
 Custom ease:
 
 ```html
@@ -517,7 +547,7 @@ Tailwind 3.x or 4.x:
 
 ## WAAPI Runtime
 
-Alpine.js meets AnimeJS uses Anime.js 4's `waapi.animate()` adapter from `animejs/waapi`.
+Alpine.js meets AnimeJS uses Anime.js 4's `waapi.animate()` adapter from `animejs/waapi`. The `parallax` preset also uses `onScroll()` from `animejs/events` to link WAAPI animation progress to scroll position.
 
 This is a good fit for the current presets because they animate CSS opacity and transforms. Anime.js documents WAAPI as a smaller path than the JavaScript `animate()` runtime and recommends it for CSS animations where page load size or CPU/network load matters.
 
@@ -526,6 +556,7 @@ Use the JavaScript Anime.js runtime instead for future features that need SVG or
 References:
 
 - [Anime.js WAAPI documentation](https://animejs.com/documentation/web-animation-api/)
+- [Anime.js onScroll documentation](https://animejs.com/documentation/events/onscroll/)
 - [When to use WAAPI](https://animejs.com/documentation/web-animation-api/when-to-use-waapi/)
 
 ## Easing Support
@@ -563,6 +594,9 @@ References:
 | `replay` | `true` |
 | `enterMargin` | `0px` |
 | `leaveMargin` | `0px` |
+| `parallax.amount` | `120` |
+| `parallax.axis` | `y` |
+| `parallax.reverse` | `false` |
 
 ## Behavior Notes
 

@@ -1,4 +1,4 @@
-import anime from './anime.js';
+import anime, { createScrollObserver } from './anime.js';
 import { observe } from './observer.js';
 import { parseModifiers } from './parser.js';
 import { getPreset } from './presets.js';
@@ -41,6 +41,22 @@ function applyStyles(element, preset, frame) {
 
   element.style.transform = transforms.join(' ');
   applyAdditionalStyles(element, preset, frame);
+}
+
+function getParallaxValues(config) {
+  const half = config.parallax.amount / 2;
+  const from = half === 0 ? 0 : half;
+  const to = half === 0 ? 0 : -half;
+
+  return config.parallax.reverse ? [to, from] : [from, to];
+}
+
+function formatParallaxTranslate(value, axis) {
+  return axis === 'x' ? `${value}px 0px` : `0px ${value}px`;
+}
+
+function applyNeutralParallaxStyle(element) {
+  element.style.translate = '0px 0px';
 }
 
 function applyStartupFadeStyles(element, preset) {
@@ -128,6 +144,41 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
     console.log('[Alpine Anime] Initializing directive', element);
     console.log('[Alpine Anime] Preset:', presetNames[0], preset);
     console.log('[Alpine Anime] Config:', config);
+  }
+
+  if (presetName === 'parallax') {
+    if (prefersReducedMotion()) {
+      applyNeutralParallaxStyle(element);
+      return;
+    }
+
+    const values = getParallaxValues(config);
+    const scrollObserver = createScrollObserver({
+      target: element,
+      axis: config.parallax.axis,
+      sync: true,
+      enter: 'end start',
+      leave: 'start end'
+    });
+    const activeAnimation = anime(element, {
+      translate: values.map((value) => formatParallaxTranslate(value, config.parallax.axis)),
+      duration: 1000,
+      ease: 'linear',
+      autoplay: scrollObserver
+    });
+
+    if (typeof cleanup === 'function') {
+      cleanup(() => {
+        if (activeAnimation && typeof activeAnimation.cancel === 'function') {
+          activeAnimation.cancel();
+        }
+        if (scrollObserver && typeof scrollObserver.revert === 'function') {
+          scrollObserver.revert();
+        }
+      });
+    }
+
+    return;
   }
 
   if (prefersReducedMotion()) {

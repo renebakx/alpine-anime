@@ -60,6 +60,8 @@
         background:
           linear-gradient(120deg, rgba(20, 54, 66, 0.42), rgba(20, 54, 66, 0.08)),
           radial-gradient(circle at 20% 20%, #4f6f76 0%, #143642 60%, #0e2229 100%);
+        background-position: center;
+        background-size: cover;
         box-shadow: 0 30px 80px rgba(20, 54, 66, 0.2);
       }
 
@@ -112,6 +114,146 @@
           radial-gradient(circle at 18% 25%, #5aa886 0%, #2d7058 60%, #163d32 100%);
       }
 
+      .feature-image.media-coast,
+      .feature-image.media-still-life,
+      .feature-image.media-courtyard,
+      .feature-image.media-gallery {
+        background-size: cover;
+        background-position: center;
+      }
+
+      .feature-image.media-coast {
+        background-image:
+          linear-gradient(120deg, rgba(20, 54, 66, 0.24), rgba(20, 54, 66, 0.02)),
+          url("./assets/parallax-coast.png");
+      }
+
+      .feature-image.media-still-life {
+        background-image:
+          linear-gradient(120deg, rgba(111, 66, 42, 0.18), rgba(255, 255, 255, 0.02)),
+          url("./assets/parallax-still-life.png");
+      }
+
+      .feature-image.media-courtyard {
+        background-image:
+          linear-gradient(120deg, rgba(10, 70, 50, 0.2), rgba(255, 255, 255, 0.02)),
+          url("./assets/parallax-courtyard.png");
+      }
+
+      .feature-image.media-gallery {
+        background-image:
+          linear-gradient(120deg, rgba(39, 44, 89, 0.18), rgba(255, 255, 255, 0.02)),
+          url("./assets/parallax-gallery.png");
+      }
+
+      .parallax-showcase {
+        display: grid;
+        gap: 1rem;
+        margin: 2rem 0 7rem;
+      }
+
+      .parallax-copy {
+        max-width: 44rem;
+        margin-bottom: 1rem;
+      }
+
+      .parallax-copy h2 {
+        margin: 0 0 0.75rem;
+        font-size: clamp(2rem, 5vw, 4rem);
+        line-height: 1;
+      }
+
+      .parallax-copy p {
+        margin: 0.5rem 0 0;
+        font-size: 1rem;
+      }
+
+      .parallax-grid {
+        display: grid;
+        gap: 1rem;
+        min-height: 820px;
+        align-items: center;
+      }
+
+      .parallax-frame {
+        position: relative;
+        overflow: hidden;
+        min-height: 260px;
+        border-radius: 1.25rem;
+        box-shadow: 0 30px 80px rgba(20, 54, 66, 0.22);
+      }
+
+      .parallax-frame.tall {
+        min-height: 420px;
+      }
+
+      .parallax-image {
+        position: absolute;
+        inset: -16% -10%;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+      }
+
+      .parallax-image.coast {
+        background-image: url("./assets/parallax-coast.png");
+      }
+
+      .parallax-image.still-life {
+        background-image: url("./assets/parallax-still-life.png");
+      }
+
+      .parallax-image.courtyard {
+        background-image: url("./assets/parallax-courtyard.png");
+      }
+
+      .parallax-image.gallery {
+        background-image: url("./assets/parallax-gallery.png");
+      }
+
+      .full-bleed-parallax {
+        position: relative;
+        width: 100vw;
+        min-height: clamp(460px, 72vh, 760px);
+        margin: 0 0 8rem calc(50% - 50vw);
+        overflow: hidden;
+        display: grid;
+        align-items: center;
+        color: white;
+        isolation: isolate;
+      }
+
+      .full-bleed-parallax::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background:
+          linear-gradient(90deg, rgba(8, 24, 30, 0.62), rgba(8, 24, 30, 0.22) 54%, rgba(8, 24, 30, 0.08)),
+          linear-gradient(0deg, rgba(8, 24, 30, 0.18), rgba(8, 24, 30, 0.18));
+      }
+
+      .full-bleed-parallax-image {
+        position: absolute;
+        inset: -18% 0;
+        z-index: -2;
+        background-image: url("./assets/parallax-courtyard.png");
+        background-position: center;
+        background-size: cover;
+      }
+
+      .full-bleed-parallax-content {
+        width: min(960px, calc(100% - 3rem));
+        margin: 0 auto;
+      }
+
+      .full-bleed-parallax h2 {
+        max-width: 10ch;
+        margin: 0 0 1.5rem;
+        font-size: clamp(3rem, 7vw, 6rem);
+        line-height: 0.95;
+      }
+
       .feature-runway {
         min-height: 56vh;
       }
@@ -140,6 +282,30 @@
           grid-template-columns: 2fr 1fr;
           align-items: center;
         }
+
+        .parallax-grid {
+          grid-template-columns: 1.2fr 0.8fr;
+          grid-template-areas:
+            "coast still"
+            "coast gallery"
+            "courtyard gallery";
+        }
+
+        .parallax-frame:nth-child(1) {
+          grid-area: coast;
+        }
+
+        .parallax-frame:nth-child(2) {
+          grid-area: still;
+        }
+
+        .parallax-frame:nth-child(3) {
+          grid-area: courtyard;
+        }
+
+        .parallax-frame:nth-child(4) {
+          grid-area: gallery;
+        }
       }
     </style>
   </head>
@@ -153,8 +319,38 @@
         </div>
       </section>
 
+      <section class="parallax-showcase">
+        <div class="parallax-copy" x-anime.fade-up.once.duration.1000>
+          <h2>Scroll-Synced Parallax</h2>
+          <p><code>x-anime.parallax</code> links Anime.js WAAPI movement to scroll progress. The image layers below use local generated demo assets.</p>
+        </div>
+        <div class="parallax-grid" aria-label="Generated parallax image examples">
+          <div class="parallax-frame tall">
+            <div class="parallax-image coast" x-anime.parallax.amount.180 role="img" aria-label="Coastal cliffs"></div>
+          </div>
+          <div class="parallax-frame">
+            <div class="parallax-image still-life" x-anime.parallax.amount.120.reverse role="img" aria-label="Minimal still life"></div>
+          </div>
+          <div class="parallax-frame">
+            <div class="parallax-image courtyard" x-anime.parallax.amount.140.axis.x role="img" aria-label="Architectural courtyard"></div>
+          </div>
+          <div class="parallax-frame tall">
+            <div class="parallax-image gallery" x-anime.parallax.amount.220.reverse role="img" aria-label="Abstract gallery interior"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="full-bleed-parallax" aria-label="Full-width parallax image example">
+        <div class="full-bleed-parallax-image" x-anime.parallax.amount.260 role="img" aria-label="Architectural courtyard"></div>
+        <div class="full-bleed-parallax-content" x-anime.fade-right.once.duration.1100>
+          <h2>Full width depth</h2>
+        </div>
+      </section>
+
+      <div id="effects"></div>
+
       <section class="feature">
-        <div class="feature-image" x-anime.fade.once></div>
+        <div class="feature-image media-coast" x-anime.fade.once role="img" aria-label="Coastal cliffs"></div>
         <aside class="feature-copy" x-anime.fade-left.once.duration.1100>
           <h2>Fade Once + Slide Left</h2>
           <p>Use <code>x-anime.fade.once</code> for fade-in without movement.</p>
@@ -165,7 +361,7 @@
       <div class="feature-runway"></div>
 
       <section class="feature">
-        <div class="feature-image alt-a" x-anime.fade-right.once.duration.1100></div>
+        <div class="feature-image alt-a media-still-life" x-anime.fade-right.once.duration.1100 role="img" aria-label="Minimal still life"></div>
         <aside class="feature-copy" x-anime.fade.once.delay.120>
           <h2>Slide Right + Fade Once</h2>
           <p>The image block starts from the left and settles in place only once.</p>
@@ -176,7 +372,7 @@
       <div class="feature-runway"></div>
 
       <section class="feature">
-        <div class="feature-image" x-anime.fade-in-out.enter.25.leave.-10.duration.1400></div>
+        <div class="feature-image media-courtyard" x-anime.fade-in-out.enter.25.leave.-10.duration.1400 role="img" aria-label="Architectural courtyard"></div>
         <aside class="feature-copy" x-anime.fade.once.delay.120>
           <h2>Fade In + Fade Out</h2>
           <p>This example uses <code>x-anime.fade-in-out</code> to fade in when entering the viewport and fade out when leaving it.</p>
@@ -187,7 +383,7 @@
       <div class="feature-runway"></div>
 
       <section class="feature">
-        <div class="feature-image alt-c" x-anime.fade-up.once.duration.1000.ease.bezier-in></div>
+        <div class="feature-image alt-c media-gallery" x-anime.fade-up.once.duration.1000.ease.bezier-in role="img" aria-label="Abstract gallery interior"></div>
         <aside class="feature-copy" x-anime.fade-up.once.duration.1000.delay.120.ease.bezier-out>
           <h2>Bezier In + Bezier Out</h2>
           <p>The image uses <code>x-anime.fade-up.ease.bezier-in</code> for a deliberate start.</p>
@@ -198,7 +394,7 @@
       <div class="feature-runway"></div>
 
       <section class="feature">
-        <div class="feature-image alt-d" x-anime.scale-in.once.duration.900.ease.power-out.250></div>
+        <div class="feature-image alt-d media-still-life" x-anime.scale-in.once.duration.900.ease.power-out.250 role="img" aria-label="Minimal still life"></div>
         <aside class="feature-copy" x-anime.fade-left.once.duration.1100.delay.120.ease.power-in.168>
           <h2>Power Easing</h2>
           <p><code>ease.power-out.250</code> maps to Anime.js <code>out(2.5)</code>.</p>
@@ -209,7 +405,7 @@
       <div class="feature-runway"></div>
 
       <section class="feature">
-        <div class="feature-image alt-e" x-anime.blur-up.once.duration.1000></div>
+        <div class="feature-image alt-e media-courtyard" x-anime.blur-up.once.duration.1000 role="img" aria-label="Architectural courtyard"></div>
         <aside class="feature-copy" x-anime.blur-up.once.duration.1000.delay.120>
           <h2>Custom Preset</h2>
           <p>The demo registers <code>blur-up</code> before Alpine starts.</p>
@@ -220,7 +416,7 @@
       <div class="feature-runway"></div>
 
       <section class="feature">
-        <div class="feature-image alt-f" x-anime.fade-down.threshold.70.once.duration.1000></div>
+        <div class="feature-image alt-f media-gallery" x-anime.fade-down.threshold.70.once.duration.1000 role="img" aria-label="Abstract gallery interior"></div>
         <aside class="feature-copy" x-anime.fade.once.delay.120>
           <h2>Fade Down + Threshold</h2>
           <p><code>x-anime.fade-down</code> slides in from above. Pair it with <code>threshold.70</code> to hold the trigger until 70% of the element is visible.</p>
@@ -231,7 +427,7 @@
       <div class="feature-runway"></div>
 
       <section class="feature">
-        <div class="feature-image alt-g" x-anime.fade-right.repeat.duration.1000></div>
+        <div class="feature-image alt-g media-coast" x-anime.fade-right.repeat.duration.1000 role="img" aria-label="Coastal cliffs"></div>
         <aside class="feature-copy" x-anime.fade-left.repeat.duration.1000.delay.120>
           <h2>Repeat</h2>
           <p>Add <code>repeat</code> to re-run the animation every time the element scrolls back into view. This is actually the default — <code>once</code> is the opt-out.</p>
@@ -242,7 +438,7 @@
       <div class="feature-runway"></div>
 
       <section class="feature">
-        <div class="feature-image alt-b" x-anime.fade.once.duration.1200></div>
+        <div class="feature-image alt-b media-courtyard" x-anime.fade.once.duration.1200 role="img" aria-label="Architectural courtyard"></div>
         <aside class="feature-copy" x-anime.fade-left.once.duration.1200.delay.100>
           <h2>Two-Column Viewport Test</h2>
           <p>This section is intentionally lower on the page so you can watch both columns animate when fully visible.</p>

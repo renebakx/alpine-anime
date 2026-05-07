@@ -5,7 +5,12 @@ const DEFAULT_CONFIG = {
   threshold: 0,
   replay: true,
   enterMargin: '0px',
-  leaveMargin: '0px'
+  leaveMargin: '0px',
+  parallax: {
+    amount: 120,
+    axis: 'y',
+    reverse: false
+  }
 };
 
 const BEZIER_EASES = {
@@ -62,7 +67,10 @@ function parseMargin(value) {
 }
 
 export function parseModifiers(modifiers = []) {
-  const config = { ...DEFAULT_CONFIG };
+  const config = {
+    ...DEFAULT_CONFIG,
+    parallax: { ...DEFAULT_CONFIG.parallax }
+  };
 
   for (let index = 0; index < modifiers.length; index += 1) {
     const modifier = modifiers[index];
@@ -128,6 +136,25 @@ export function parseModifiers(modifiers = []) {
       const parsed = parseMargin(modifiers[index + 1]);
       if (parsed !== null) config.leaveMargin = parsed;
       index += 1;
+      continue;
+    }
+
+    if (modifier === 'amount') {
+      const parsed = parseNumber(modifiers[index + 1]);
+      if (Number.isFinite(parsed)) config.parallax.amount = clamp(parsed, 0, 1000);
+      index += 1;
+      continue;
+    }
+
+    if (modifier === 'axis') {
+      const axis = modifiers[index + 1];
+      if (axis === 'x' || axis === 'y') config.parallax.axis = axis;
+      index += 1;
+      continue;
+    }
+
+    if (modifier === 'reverse') {
+      config.parallax.reverse = true;
     }
   }
 

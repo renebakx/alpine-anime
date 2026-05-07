@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-const { observeMock, animeMock } = vi.hoisted(() => ({
+const { observeMock, animeMock, createScrollObserverMock } = vi.hoisted(() => ({
   observeMock: vi.fn(),
-  animeMock: vi.fn()
+  animeMock: vi.fn(),
+  createScrollObserverMock: vi.fn()
 }));
 
 vi.mock('../src/observer.js', () => ({
@@ -10,7 +11,8 @@ vi.mock('../src/observer.js', () => ({
 }));
 
 vi.mock('../src/anime.js', () => ({
-  default: animeMock
+  default: animeMock,
+  createScrollObserver: createScrollObserverMock
 }));
 
 import directive from '../src/directive.js';
@@ -20,6 +22,7 @@ describe('directive', () => {
   beforeEach(() => {
     observeMock.mockReset();
     animeMock.mockReset();
+    createScrollObserverMock.mockReset();
     resetPresets();
     delete globalThis.matchMedia;
     Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true });
@@ -544,5 +547,93 @@ describe('directive', () => {
     expect(element.style.filter).toBe('blur(0px)');
     expect(observeMock).not.toHaveBeenCalled();
     expect(animeMock).not.toHaveBeenCalled();
+  });
+
+  test('sets up parallax as a scroll-synced WAAPI animation', () => {
+    const element = document.createElement('div');
+    const scrollObserver = { revert: vi.fn() };
+    createScrollObserverMock.mockReturnValue(scrollObserver);
+
+    directive(element, { modifiers: ['parallax'] });
+
+    expect(observeMock).not.toHaveBeenCalled();
+    expect(createScrollObserverMock).toHaveBeenCalledWith({
+      target: element,
+      axis: 'y',
+      sync: true,
+      enter: 'end start',
+      leave: 'start end'
+    });
+    expect(animeMock).toHaveBeenCalledWith(element, {
+      translate: ['0px 60px', '0px -60px'],
+      duration: 1000,
+      ease: 'linear',
+      autoplay: scrollObserver
+    });
+  });
+
+  test('supports horizontal reversed parallax with a custom amount', () => {
+    const element = document.createElement('div');
+    const scrollObserver = { revert: vi.fn() };
+    createScrollObserverMock.mockReturnValue(scrollObserver);
+
+    directive(element, { modifiers: ['parallax', 'amount', '240', 'axis', 'x', 'reverse'] });
+
+    expect(createScrollObserverMock).toHaveBeenCalledWith(expect.objectContaining({
+      target: element,
+      axis: 'x'
+    }));
+    expect(animeMock).toHaveBeenCalledWith(element, {
+      translate: ['-120px 0px', '120px 0px'],
+      duration: 1000,
+      ease: 'linear',
+      autoplay: scrollObserver
+    });
+  });
+
+  test('keeps existing transform styles separate from parallax translate animation', () => {
+    const element = document.createElement('div');
+    const scrollObserver = { revert: vi.fn() };
+    element.style.transform = 'translateX(20px)';
+    createScrollObserverMock.mockReturnValue(scrollObserver);
+
+    directive(element, { modifiers: ['parallax'] });
+
+    expect(element.style.transform).toBe('translateX(20px)');
+    expect(animeMock).toHaveBeenCalledWith(element, expect.objectContaining({
+      translate: ['0px 60px', '0px -60px']
+    }));
+    expect(animeMock.mock.calls[0][1]).not.toHaveProperty('x');
+    expect(animeMock.mock.calls[0][1]).not.toHaveProperty('y');
+  });
+
+  test('respects reduced motion for parallax and skips scroll runtime', () => {
+    const element = document.createElement('div');
+    globalThis.matchMedia = () => ({ matches: true });
+
+    directive(element, { modifiers: ['parallax', 'amount', '240'] });
+
+    expect(element.style.translate).toBe('0px 0px');
+    expect(element.style.transform).toBe('');
+    expect(createScrollObserverMock).not.toHaveBeenCalled();
+    expect(observeMock).not.toHaveBeenCalled();
+    expect(animeMock).not.toHaveBeenCalled();
+  });
+
+  test('cleans up parallax animation and scroll observer when Alpine destroys the element', () => {
+    const element = document.createElement('div');
+    const cleanup = vi.fn();
+    const cancel = vi.fn();
+    const scrollObserver = { revert: vi.fn() };
+    createScrollObserverMock.mockReturnValue(scrollObserver);
+    animeMock.mockReturnValue({ cancel });
+
+    directive(element, { modifiers: ['parallax'] }, { cleanup });
+
+    const registeredCleanup = cleanup.mock.calls[0][0];
+    registeredCleanup();
+
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(scrollObserver.revert).toHaveBeenCalledTimes(1);
   });
 });

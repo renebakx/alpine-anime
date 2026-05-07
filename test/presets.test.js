@@ -8,9 +8,14 @@ describe('preset registry', () => {
 
   test('includes built-in presets by default', () => {
     expect(getPresetNames()).toContain('fade-up');
+    expect(getPresetNames()).toContain('parallax');
     expect(getPreset('fade-up')).toEqual({
       y: [50, 0],
       opacity: [0, 1]
+    });
+    expect(getPreset('parallax')).toEqual({
+      type: 'scroll',
+      effect: 'parallax'
     });
   });
 

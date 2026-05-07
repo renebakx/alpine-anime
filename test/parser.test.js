@@ -10,7 +10,12 @@ describe('parseModifiers', () => {
       threshold: 0,
       replay: true,
       enterMargin: '0px',
-      leaveMargin: '0px'
+      leaveMargin: '0px',
+      parallax: {
+        amount: 120,
+        axis: 'y',
+        reverse: false
+      }
     });
   });
 
@@ -22,7 +27,12 @@ describe('parseModifiers', () => {
       threshold: 0.35,
       replay: true,
       enterMargin: '0px',
-      leaveMargin: '0px'
+      leaveMargin: '0px',
+      parallax: {
+        amount: 120,
+        axis: 'y',
+        reverse: false
+      }
     });
   });
 
@@ -34,7 +44,12 @@ describe('parseModifiers', () => {
       threshold: 0,
       replay: true,
       enterMargin: '0px',
-      leaveMargin: '0px'
+      leaveMargin: '0px',
+      parallax: {
+        amount: 120,
+        axis: 'y',
+        reverse: false
+      }
     });
   });
 
@@ -85,6 +100,63 @@ describe('parseModifiers', () => {
     });
     expect(parseModifiers(['ease', 'power-out', '2400'])).toMatchObject({
       ease: 'out(10)'
+    });
+  });
+
+  test('parses parallax amount modifiers as pixel ranges', () => {
+    expect(parseModifiers(['parallax', 'amount', '240'])).toMatchObject({
+      parallax: {
+        amount: 240,
+        axis: 'y',
+        reverse: false
+      }
+    });
+  });
+
+  test('falls back to the default parallax amount for invalid values', () => {
+    expect(parseModifiers(['parallax', 'amount', 'wide'])).toMatchObject({
+      parallax: {
+        amount: 120
+      }
+    });
+  });
+
+  test('clamps parallax amount to the supported range', () => {
+    expect(parseModifiers(['parallax', 'amount', '-20'])).toMatchObject({
+      parallax: {
+        amount: 0
+      }
+    });
+    expect(parseModifiers(['parallax', 'amount', '1800'])).toMatchObject({
+      parallax: {
+        amount: 1000
+      }
+    });
+  });
+
+  test('parses parallax axis modifiers', () => {
+    expect(parseModifiers(['parallax', 'axis', 'x'])).toMatchObject({
+      parallax: {
+        axis: 'x'
+      }
+    });
+    expect(parseModifiers(['parallax', 'axis', 'y'])).toMatchObject({
+      parallax: {
+        axis: 'y'
+      }
+    });
+    expect(parseModifiers(['parallax', 'axis', 'z'])).toMatchObject({
+      parallax: {
+        axis: 'y'
+      }
+    });
+  });
+
+  test('parses the parallax reverse modifier', () => {
+    expect(parseModifiers(['parallax', 'reverse'])).toMatchObject({
+      parallax: {
+        reverse: true
+      }
     });
   });
 });

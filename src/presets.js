@@ -5,7 +5,8 @@ const BUILT_IN_PRESETS = {
   'fade-left': { x: [100, 0], opacity: [0, 1] },
   'fade-up': { y: [50, 0], opacity: [0, 1] },
   'fade-down': { y: [-50, 0], opacity: [0, 1] },
-  'scale-in': { scale: [0.9, 1], opacity: [0, 1] }
+  'scale-in': { scale: [0.9, 1], opacity: [0, 1] },
+  parallax: { type: 'scroll', effect: 'parallax' }
 };
 
 let presets = { ...BUILT_IN_PRESETS };
