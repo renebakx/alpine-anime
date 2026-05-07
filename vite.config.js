@@ -1,13 +1,9 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig(({ mode }) => {
-  const isCdn = mode === 'cdn' || mode === 'debug';
-  const isDebug = mode === 'debug';
+  const isCdn = mode === 'cdn';
 
   return {
-    define: {
-      __DEBUG__: isDebug
-    },
     test: {
       environment: 'jsdom'
     },
@@ -18,7 +14,7 @@ export default defineConfig(({ mode }) => {
         formats: isCdn ? ['iife'] : ['es'],
         fileName: (format) => {
           if (format === 'es') return 'module.js';
-          return isDebug ? 'cdn.debug.js' : 'cdn.js';
+          return 'cdn.js';
         }
       },
       rollupOptions: {
@@ -29,7 +25,7 @@ export default defineConfig(({ mode }) => {
           }
         }
       },
-      minify: isDebug ? false : 'esbuild',
+      minify: 'esbuild',
       target: 'es2018',
       emptyOutDir: !isCdn
     }

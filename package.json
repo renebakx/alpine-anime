@@ -1,9 +1,10 @@
 {
-  "name": "alpine-anime",
+  "name": "@renebakx/alpine-anime",
   "version": "0.1.0",
+  "description": "A small Alpine.js x-anime directive for viewport-driven Anime.js reveal animations.",
   "type": "module",
+  "homepage": "https://renebakx.github.io/alpine-anime/demo.html",
   "module": "dist/module.js",
-  "unpkg": "dist/cdn.js",
   "exports": {
     ".": {
       "import": "./dist/module.js"
@@ -12,8 +13,16 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/renebakx/alpine-anime.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
-    "build": "vite build && vite build --mode cdn && vite build --mode debug",
+    "build": "vite build && vite build --mode cdn",
+    "build:pages": "npm run build && node scripts/prepare-pages-demo.mjs",
     "test": "vitest run"
   },
   "peerDependencies": {

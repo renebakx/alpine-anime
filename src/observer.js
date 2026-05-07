@@ -17,16 +17,7 @@ export function observe(element, handlers, config) {
   const enterMargin = config?.enterMargin ?? '0px';
   const leaveMargin = config?.leaveMargin ?? '0px';
 
-  if (typeof __DEBUG__ !== 'undefined' && __DEBUG__) {
-    console.log('[Alpine Anime] Setting up observer', element);
-    console.log('[Alpine Anime] Root margins - enter:', enterMargin, 'leave:', leaveMargin);
-    console.log('[Alpine Anime] Threshold:', config?.threshold);
-  }
-
   if (typeof IntersectionObserver !== 'function') {
-    if (typeof __DEBUG__ !== 'undefined' && __DEBUG__) {
-      console.warn('[Alpine Anime] IntersectionObserver not supported, triggering enter immediately');
-    }
     if (typeof enter === 'function') {
       enter({ isIntersecting: true, target: element });
     }
@@ -42,9 +33,6 @@ export function observe(element, handlers, config) {
 
       if (!entry.isIntersecting) {
         if (hasIntersected && typeof leave === 'function') {
-          if (typeof __DEBUG__ !== 'undefined' && __DEBUG__) {
-            console.log('[Alpine Anime] Leave viewport', entry.target);
-          }
           leave(entry);
         }
 
@@ -57,17 +45,11 @@ export function observe(element, handlers, config) {
       }
 
       hasIntersected = true;
-      if (typeof __DEBUG__ !== 'undefined' && __DEBUG__) {
-        console.log('[Alpine Anime] Enter viewport', entry.target);
-      }
       if (typeof enter === 'function') {
         enter(entry);
       }
 
       if (!config.replay) {
-        if (typeof __DEBUG__ !== 'undefined' && __DEBUG__) {
-          console.log('[Alpine Anime] Once: unobserving', entry.target);
-        }
         observer.unobserve(element);
       }
     }
@@ -79,9 +61,6 @@ export function observe(element, handlers, config) {
   observer.observe(element);
 
   return () => {
-    if (typeof __DEBUG__ !== 'undefined' && __DEBUG__) {
-      console.log('[Alpine Anime] Disconnecting observer', element);
-    }
     if (typeof observer.disconnect === 'function') {
       observer.disconnect();
       return;

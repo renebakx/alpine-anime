@@ -11,7 +11,13 @@ This project does not try to implement the full AnimeJS API. It keeps the API sm
 ### Install
 
 ```bash
-npm install alpine-anime alpinejs
+npm install @renebakx/alpine-anime alpinejs
+```
+
+This first release is published to GitHub Packages. Configure npm for the `@renebakx` scope before installing:
+
+```bash
+npm config set @renebakx:registry https://npm.pkg.github.com
 ```
 
 For local development in this repository:
@@ -24,7 +30,7 @@ npm install
 
 ```js
 import Alpine from 'alpinejs';
-import AlpineAnime from 'alpine-anime';
+import AlpineAnime from '@renebakx/alpine-anime';
 
 Alpine.plugin(AlpineAnime);
 Alpine.start();
@@ -46,6 +52,8 @@ Alpine.start();
 ```
 
 The CDN build registers itself on Alpine's `alpine:init` event.
+
+Demo page: [renebakx.github.io/alpine-anime/demo.html](https://renebakx.github.io/alpine-anime/demo.html)
 
 ## No Extra CSS Required
 
@@ -463,7 +471,7 @@ The built-in presets cover common reveal patterns. For project-specific motion, 
 
 ```js
 import Alpine from 'alpinejs';
-import AlpineAnime from 'alpine-anime';
+import AlpineAnime from '@renebakx/alpine-anime';
 
 AlpineAnime.definePreset('blur-up', {
   opacity: [0, 1],
@@ -481,7 +489,7 @@ Alpine.start();
 The CDN version automatically registers itself on `alpine:init`. You can define custom presets within your own `alpine:init` listener:
 
 ```html
-<script defer src="https://unpkg.com/alpine-anime/dist/cdn.js"></script>
+<script defer src="/dist/cdn.js"></script>
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 <script>

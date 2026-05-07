@@ -130,21 +130,12 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
   const presetNames = modifiers.filter((modifier) => Boolean(getPreset(modifier)));
 
   if (presetNames.length !== 1) {
-    if (typeof __DEBUG__ !== 'undefined' && __DEBUG__) {
-      console.warn('[Alpine Anime] Directive ignored: exactly one preset required, found:', presetNames);
-    }
     return;
   }
 
   const presetName = presetNames[0];
   const preset = getPreset(presetName);
   const config = parseModifiers(modifiers);
-
-  if (typeof __DEBUG__ !== 'undefined' && __DEBUG__) {
-    console.log('[Alpine Anime] Initializing directive', element);
-    console.log('[Alpine Anime] Preset:', presetNames[0], preset);
-    console.log('[Alpine Anime] Config:', config);
-  }
 
   if (presetName === 'parallax') {
     if (prefersReducedMotion()) {
@@ -198,11 +189,6 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
       activeAnimation.cancel();
     }
 
-    if (typeof __DEBUG__ !== 'undefined' && __DEBUG__) {
-      console.log('[Alpine Anime] Triggering animation', element);
-      console.log('[Alpine Anime] Animation parameters:', parameters);
-    }
-
     activeAnimation = anime(element, {
       ...parameters,
       duration: parameters.duration ?? config.duration,
@@ -254,9 +240,6 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
 
   if (typeof cleanup === 'function') {
     cleanup(() => {
-      if (typeof __DEBUG__ !== 'undefined' && __DEBUG__) {
-        console.log('[Alpine Anime] Cleaning up directive', element);
-      }
       if (activeAnimation && typeof activeAnimation.cancel === 'function') {
         activeAnimation.cancel();
       }
