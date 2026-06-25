@@ -58,6 +58,12 @@ function formatParallaxTranslate(value, axis) {
 
 function applyNeutralParallaxStyle(element) {
   element.style.translate = '0px 0px';
+  element.style.transform = '';
+}
+
+function applyMobileNeutralParallaxStyle(element) {
+  element.style.translate = '';
+  element.style.transform = '';
 }
 
 function applyStartupFadeStyles(element, preset) {
@@ -71,6 +77,30 @@ function applyStartupFadeStyles(element, preset) {
 function prefersReducedMotion() {
   if (typeof globalThis.matchMedia !== 'function') return false;
   return globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function isMobileViewport() {
+  if (typeof globalThis.matchMedia === 'function') {
+    const mediaQuery = '(max-width: 767px)';
+    const result = globalThis.matchMedia(mediaQuery);
+
+    if (result.media === mediaQuery) {
+      return result.matches;
+    }
+  }
+
+  const width = globalThis.innerWidth || globalThis.document?.documentElement?.clientWidth || 0;
+  return width > 0 && width < 768;
+}
+
+function applyMobileFinalStyle(element, preset) {
+  if (preset.opacity) {
+    element.style.opacity = String(getFrameValue(preset.opacity, 'last'));
+  }
+
+  applyAdditionalStyles(element, preset, 'last');
+  element.style.transform = '';
+  element.style.translate = '';
 }
 
 function isRendered(element, { ignoreOpacity = false } = {}) {
@@ -137,8 +167,14 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
   const presetName = presetNames[0];
   const preset = getPreset(presetName);
   const config = parseModifiers(modifiers);
+  const reduceMobileMotion = isMobileViewport();
 
   if (presetName === 'parallax') {
+    if (reduceMobileMotion) {
+      applyMobileNeutralParallaxStyle(element);
+      return;
+    }
+
     if (prefersReducedMotion()) {
       applyNeutralParallaxStyle(element);
       return;
@@ -170,6 +206,11 @@ export default function directive(element, { modifiers = [] }, { cleanup } = {})
       });
     }
 
+    return;
+  }
+
+  if (reduceMobileMotion) {
+    applyMobileFinalStyle(element, preset);
     return;
   }
 
